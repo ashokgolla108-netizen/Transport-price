@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guruswamy Transportation & Price Dispatcher</title>
+    <title id="pageTitle">Guruswamy Transportation & Price Dispatcher</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -105,11 +105,11 @@
         </div>
       </div>
 
-      <!-- DAY-WISE SUMMARY (Latest Expanded, Others Collapsible) -->
+      <!-- DAY-WISE SUMMARY (Latest visible, remaining in collapsible dropdown) -->
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
           <h2 class="text-base font-bold text-slate-800">📅 Day-wise Summary</h2>
-          <button onclick="toggleAllDays()" id="toggleDaysBtn" class="text-xs font-bold text-sky-700 hover:underline">📂 Expand All Days</button>
+          <button onclick="toggleRemainingDays()" id="toggleDaysBtn" class="text-xs font-bold text-sky-700 hover:underline">📂 Expand All Days</button>
         </div>
         <div class="space-y-2.5" id="daySummaryContainer">
           <div class="text-center text-slate-400 py-4">No daily records yet.</div>
@@ -295,7 +295,8 @@
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Less Boxes</label>
-              <input type="number" id="dispatchLess" value="5" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
+              <!-- Less default set to blank as requested -->
+              <input type="number" id="dispatchLess" placeholder="e.g. 5" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
             </div>
           </div>
 
@@ -425,7 +426,9 @@
 
     function updateHeaderTitle() {
         let titleEl = document.getElementById('headerTitle');
-        if (titleEl) titleEl.innerText = currentUser;
+        let pageTitleEl = document.getElementById('pageTitle');
+        if (titleEl) titleEl.innerText = `${currentUser} Transportation`;
+        if (pageTitleEl) pageTitleEl.innerText = `${currentUser} - Transport & Dispatcher`;
     }
     updateHeaderTitle();
 
@@ -460,15 +463,22 @@
     let cloudTransportRecords = [];
     let dispatcherHistoryList = [];
     let farmerDirectory = {};
-    let allDaysExpanded = false;
+    let remainingDaysExpanded = false;
 
     function initGuruswamyApp() {
         loadTransportData();
         loadFarmerDirectory();
         loadDispatcherHistory();
+        
+        // Restore active tab from localStorage on load/refresh so it doesn't jump back to overview
+        let savedTab = localStorage.getItem('guruswamy_active_tab') || 'overview';
+        switchTab(savedTab, false);
     }
 
-    window.switchTab = function(tabName) {
+    window.switchTab = function(tabName, save = true) {
+        if (save) {
+            localStorage.setItem('guruswamy_active_tab', tabName);
+        }
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.getElementById('tab-' + tabName).classList.remove('hidden');
         
@@ -517,7 +527,7 @@
             });
             showToast('Transport record saved successfully');
             
-            // RESET FORM COMPLETELY (Resetting Rate back to 25, clearing boxes & notes)
+            // RESET FORM COMPLETELY
             document.getElementById('transBoxes').value = '';
             document.getElementById('transRate').value = '25';
             document.getElementById('transNotes').value = '';
@@ -568,10 +578,16 @@
         if (Array.from(seasons).includes(currentVal)) select.value = currentVal;
     }
 
-    window.toggleAllDays = function() {
-        allDaysExpanded = !allDaysExpanded;
-        document.getElementById('toggleDaysBtn').innerText = allDaysExpanded ? "📁 Collapse Older Days" : "📂 Expand All Days";
-        renderOverview();
+    window.toggleRemainingDays = function() {
+        remainingDaysExpanded = !remainingDaysExpanded;
+        const dropdownEl = document.getElementById('remainingDaysDropdown');
+        const btnEl = document.getElementById('toggleDaysBtn');
+        if (dropdownEl) {
+            dropdownEl.classList.toggle('hidden', !remainingDaysExpanded);
+        }
+        if (btnEl) {
+            btnEl.innerText = remainingDaysExpanded ? "📁 Collapse Older Days" : "📂 Expand All Days";
+        }
     };
 
     window.renderOverview = function() {
@@ -617,17 +633,17 @@
         if (sortedDays.length === 0) {
             dayContainer.innerHTML = '<div class="text-center text-slate-400 py-4">No daily records yet.</div>';
         } else {
-            dayContainer.innerHTML = sortedDays.map(([dStr, data], index) => {
+            let latestEntry = sortedDays[0];
+            let remainingEntries = sortedDays.slice(1);
+
+            const renderCardHtml = ([dStr, data], isLatest = false) => {
                 const farmerDetailsStr = Object.entries(data.farmers)
                     .map(([fName, fBoxes]) => `${fName} (${fBoxes} boxes)`)
                     .join(', ');
 
-                let isLatest = index === 0;
-                let displayClass = (isLatest || allDaysExpanded) ? "" : "hidden";
-
                 return `
-                    <div class="border border-slate-100 rounded-xl p-3 bg-slate-50/50 day-card" data-index="${index}">
-                        <div class="flex justify-between items-center cursor-pointer" onclick="toggleDayCard(this)">
+                    <div class="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
+                        <div class="flex justify-between items-center">
                             <div class="flex items-center gap-2">
                                 <span class="font-bold text-xs text-sky-900">📅 ${dStr}</span>
                                 ${isLatest ? '<span class="bg-emerald-100 text-emerald-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full">Latest</span>' : ''}
@@ -637,12 +653,25 @@
                                 <span class="text-[10px] text-slate-400 ml-2">(${data.totalBoxes} boxes)</span>
                             </div>
                         </div>
-                        <div class="day-details mt-2 pt-2 border-t border-slate-200/60 text-xs text-slate-600 ${displayClass}">
+                        <div class="mt-2 pt-2 border-t border-slate-200/60 text-xs text-slate-600">
                             <div><strong class="text-slate-700">Farmers:</strong> ${farmerDetailsStr}</div>
                         </div>
                     </div>
                 `;
-            }).join('');
+            };
+
+            let containerHtml = renderCardHtml(latestEntry, true);
+
+            if (remainingEntries.length > 0) {
+                let dropdownDisplayClass = remainingDaysExpanded ? "" : "hidden";
+                containerHtml += `
+                    <div id="remainingDaysDropdown" class="space-y-2.5 pt-1 ${dropdownDisplayClass}">
+                        ${remainingEntries.map(entry => renderCardHtml(entry, false)).join('')}
+                    </div>
+                `;
+            }
+
+            dayContainer.innerHTML = containerHtml;
         }
 
         const farmerTbody = document.getElementById('farmerSummaryTableBody');
@@ -686,11 +715,6 @@
         }
     };
 
-    window.toggleDayCard = function(headerEl) {
-        let details = headerEl.nextElementSibling;
-        details.classList.toggle('hidden');
-    };
-
     window.shareFarmerSummaryWhatsApp = function() {
         const selectedSeason = document.getElementById('overviewSeasonFilter').value;
         const filteredRecords = selectedSeason === 'ALL' 
@@ -711,7 +735,7 @@
         });
 
         let title = selectedSeason === 'ALL' ? 'Overall Transport Report' : `Season Report (${selectedSeason})`;
-        let msg = `🚛 *Guruswamy Transport - ${title}*\n`;
+        let msg = `🚛 *${currentUser} Transport - ${title}*\n`;
         msg += `📦 *Total Boxes:* ${totalBoxes}\n`;
         msg += `💰 *Total Revenue:* ₹${totalEarned.toLocaleString('en-IN')}\n\n`;
         msg += `👨‍🌾 *Farmer-wise Breakdown:*\n`;
@@ -896,6 +920,7 @@
 
             // RESET DISPATCHER FORM
             document.getElementById('dispatchBoxes').value = '';
+            document.getElementById('dispatchLess').value = '';
             document.getElementById('dispatchPrice').value = '';
             document.getElementById('prevSoldBoxes').innerText = '0';
             document.getElementById('prevGross').innerText = '0.00';
@@ -968,7 +993,7 @@
         document.getElementById('dispatchFarmerSelect').value = r.farmerName || '';
         document.getElementById('dispatchGrade').value = r.grade || 'High';
         document.getElementById('dispatchBoxes').value = r.boxes || '';
-        document.getElementById('dispatchLess').value = r.less !== undefined ? r.less : 5;
+        document.getElementById('dispatchLess').value = r.less !== undefined ? r.less : '';
         document.getElementById('dispatchPrice').value = r.price || '';
         updateDispatchPreview();
         remove(ref(db, `${dbPrefix}dispatcher_history/${id}`));
