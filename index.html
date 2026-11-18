@@ -487,9 +487,13 @@
         toggleEarningsFilterControls();
     }
 
+    // EXPOSED GLOBALLY FOR TAB SWITCHING
     window.switchTab = function(tabName) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        document.getElementById('tab-' + tabName).classList.remove('hidden');
+        let targetTab = document.getElementById('tab-' + tabName);
+        if (targetTab) {
+            targetTab.classList.remove('hidden');
+        }
         
         const titles = {
             overview: "Overview & Farmer Earnings",
