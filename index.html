@@ -11,12 +11,12 @@
             --text-main: #0f172a;
         }
         body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        input[type="text"], input[type="number"], input[type="date"], select {
+        input[type="text"], input[type="number"], input[type="date"], input[type="month"], select {
             border: 1.5px solid #cbd5e1;
             transition: all 0.2s ease-in-out;
             background-color: #ffffff;
         }
-        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus {
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, input[type="month"]:focus, select:focus {
             border-color: #0284c7 !important;
             box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
             outline: none !important;
@@ -57,17 +57,28 @@
     </div>
   </div>
 
-  <!-- Header -->
+  <!-- Header with Global Season Selector -->
   <header class="bg-gradient-to-r from-sky-800 to-sky-700 text-white py-3 shadow-md sticky top-0 z-40">
     <div class="max-w-4xl mx-auto px-4 flex justify-between items-center gap-2">
       <div class="flex items-center gap-2">
         <span class="text-lg">🚛</span>
         <div>
           <h1 class="text-xs font-bold tracking-wide" id="headerTitle">Guruswamy Transportation</h1>
-          <p class="text-sky-200 text-[9px]" id="headerSub">Overview & Farmer Earnings</p>
+          <p class="text-sky-200 text-[9px]" id="headerSub">Overview & Financial Analytics</p>
         </div>
       </div>
-      <div>
+      <div class="flex items-center gap-2">
+        <!-- GLOBAL SEASON SELECTOR -->
+        <div class="flex items-center gap-1 bg-sky-900/90 px-2.5 py-1 rounded-xl border border-sky-600">
+          <span class="text-[10px] text-sky-200 font-bold uppercase">Season:</span>
+          <select id="globalSeasonSelect" onchange="handleGlobalSeasonChange(this.value)" class="bg-sky-800 text-white text-xs font-black rounded-lg px-2 py-1 border-0 outline-none cursor-pointer">
+            <option value="2026">2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+            <option value="ALL">🌐 Overall (All)</option>
+            <option value="CUSTOM">+ Custom Season</option>
+          </select>
+        </div>
         <button onclick="logout()" class="bg-sky-900 hover:bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-xl border border-sky-600 shadow-sm transition flex items-center gap-1">
           <span>🚪</span> Logout
         </button>
@@ -81,26 +92,36 @@
     <!-- ==================== TAB 1: OVERVIEW & ANALYTICS ==================== -->
     <div id="tab-overview" class="space-y-5 tab-content">
       
-      <!-- Season Filter Bar -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex flex-wrap justify-between items-center gap-2">
-        <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">📅 View Filter:</div>
-        <select id="overviewSeasonFilter" onchange="renderOverview()" class="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-900 bg-sky-50 border-sky-200">
-          <option value="ALL">🌐 Overall (All Seasons)</option>
-        </select>
+      <!-- Custom Date & Monthly Revenue Filter Bar -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
+        <div class="flex justify-between items-center">
+          <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">📅 Monthly Revenue Custom Filter:</div>
+          <button onclick="resetMonthlyFilter()" class="text-[11px] font-bold text-sky-600 hover:underline">Clear Filter (Show All Dates)</button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">Select Specific Month</label>
+            <input type="month" id="filterMonthInput" onchange="renderOverview()" class="w-full rounded-xl p-2.5 text-xs font-bold text-slate-800">
+          </div>
+          <div class="bg-sky-50 p-2.5 rounded-xl border border-sky-200 text-xs text-sky-900 flex justify-between items-center font-bold">
+            <span>Active Season Filter:</span>
+            <span id="activeSeasonBadge" class="text-sky-800 bg-white px-2.5 py-1 rounded-lg shadow-sm">2026</span>
+          </div>
+        </div>
       </div>
 
-      <!-- High-Level Summary Cards (Synced with Expenses) -->
+      <!-- High-Level Summary Cards -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div class="bg-gradient-to-br from-sky-700 to-blue-800 p-4 rounded-2xl text-white col-span-2 sm:col-span-1 shadow-sm">
-          <div class="text-[10px] uppercase tracking-wider font-bold opacity-85 mb-1">💰 Gross Earned</div>
+          <div class="text-[10px] uppercase tracking-wider font-bold opacity-85 mb-1">💰 Period Gross Earned</div>
           <div class="text-xl font-black" id="ovTotalEarned">₹0.00</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-          <div class="text-[10px] uppercase tracking-wider font-bold text-rose-500 mb-1">💸 Total Expenses</div>
+          <div class="text-[10px] uppercase tracking-wider font-bold text-rose-500 mb-1">💸 Period Expenses</div>
           <div class="text-xl font-black text-rose-600" id="ovTotalExpenses">₹0.00</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-          <div class="text-[10px] uppercase tracking-wider font-bold text-emerald-600 mb-1">💎 Net Profit</div>
+          <div class="text-[10px] uppercase tracking-wider font-bold text-emerald-600 mb-1">💎 Period Net Profit</div>
           <div class="text-xl font-black text-emerald-700" id="ovNetProfit">₹0.00</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
@@ -125,7 +146,7 @@
         <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
           <div>
             <h2 class="text-base font-bold text-slate-800">👨‍🌾 Earnings Per Farmer</h2>
-            <p class="text-[11px] text-slate-400" id="farmerBreakdownSubtitle">Showing overall earnings across all seasons</p>
+            <p class="text-[11px] text-slate-400" id="farmerBreakdownSubtitle">Showing overall earnings for active filter</p>
           </div>
           <button onclick="shareFarmerSummaryWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
             <span>💬</span> Share
@@ -159,7 +180,7 @@
                 <th class="p-2.5 text-left">Season</th>
                 <th class="p-2.5 text-center">Farmers</th>
                 <th class="p-2.5 text-center">Total Boxes</th>
-                <th class="p-2.5 text-right">Total Revenue</th>
+                <th class="p-2.5 text-right">Total Revenue & Net</th>
               </tr>
             </thead>
             <tbody id="seasonSummaryTableBody">
@@ -183,14 +204,8 @@
               <input type="date" id="transDate" class="w-full rounded-xl p-2.5 text-sm">
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-600 mb-1">Season</label>
-              <select id="transSeason" onchange="toggleCustomSeason(this.value)" class="w-full rounded-xl p-2.5 text-sm">
-                <option value="2026">2026</option>
-                <option value="2027">2027</option>
-                <option value="2028">2028</option>
-                <option value="CUSTOM">+ Custom Season</option>
-              </select>
-              <input type="text" id="customSeasonInput" placeholder="e.g. Special Season" class="hidden w-full mt-1.5 rounded-xl p-2 text-sm">
+              <label class="block text-xs font-bold text-slate-600 mb-1">Season (Auto-linked to Header)</label>
+              <input type="text" id="transSeasonDisplay" readonly class="w-full rounded-xl p-2.5 text-sm font-bold text-sky-900 bg-sky-50 cursor-not-allowed">
             </div>
           </div>
 
@@ -258,7 +273,7 @@
       </section>
     </div>
 
-    <!-- ==================== TAB 3: EXPENSES TRACKER (NEW) ==================== -->
+    <!-- ==================== TAB 3: EXPENSES TRACKER ==================== -->
     <div id="tab-expenses" class="space-y-5 tab-content hidden">
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <h2 class="text-base font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">💸 Track Transport Expenses</h2>
@@ -270,12 +285,8 @@
               <input type="date" id="expDate" class="w-full rounded-xl p-2.5 text-sm">
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-600 mb-1">Season</label>
-              <select id="expSeason" class="w-full rounded-xl p-2.5 text-sm font-bold text-sky-900 bg-sky-50">
-                <option value="2026">2026</option>
-                <option value="2027">2027</option>
-                <option value="2028">2028</option>
-              </select>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Season (Auto-linked to Header)</label>
+              <input type="text" id="expSeasonDisplay" readonly class="w-full rounded-xl p-2.5 text-sm font-bold text-rose-900 bg-rose-50 cursor-not-allowed">
             </div>
           </div>
 
@@ -509,7 +520,7 @@
 
     let currentUser = localStorage.getItem('guruswamy_logged_user') || 'Guruswamy';
     const dbPrefix = 'guruswamy_';
-    let lastUsedSeason = "2026";
+    let currentGlobalSeason = "2026";
 
     function updateHeaderTitle() {
         let titleEl = document.getElementById('headerTitle');
@@ -579,9 +590,44 @@
         });
     };
 
-    window.toggleCustomSeason = function(val) {
-        document.getElementById('customSeasonInput').classList.toggle('hidden', val !== 'CUSTOM');
+    window.handleGlobalSeasonChange = function(val) {
+        if (val === 'CUSTOM') {
+            let custom = prompt("Enter custom season name (e.g. Winter 2026):");
+            if (custom && custom.trim() !== '') {
+                let formatted = custom.trim();
+                currentGlobalSeason = formatted;
+                addSeasonOptionToGlobalDropdown(formatted);
+            } else {
+                document.getElementById('globalSeasonSelect').value = currentGlobalSeason;
+                return;
+            }
+        } else {
+            currentGlobalSeason = val;
+        }
+
+        document.getElementById('transSeasonDisplay').value = currentGlobalSeason;
+        document.getElementById('expSeasonDisplay').value = currentGlobalSeason;
+        document.getElementById('activeSeasonBadge').innerText = currentGlobalSeason === 'ALL' ? '🌐 Overall (All Seasons)' : currentGlobalSeason;
+        
+        renderOverview();
+        renderTransportRecords();
+        renderExpenseRecords();
     };
+
+    function addSeasonOptionToGlobalDropdown(seasonName) {
+        const select = document.getElementById('globalSeasonSelect');
+        let optionExists = Array.from(select.options).some(o => o.value === seasonName);
+        if (!optionExists) {
+            let opt = document.createElement('option');
+            opt.value = seasonName;
+            opt.text = seasonName;
+            select.insertBefore(opt, select.lastElementChild);
+        }
+        select.value = seasonName;
+        document.getElementById('transSeasonDisplay').value = seasonName;
+        document.getElementById('expSeasonDisplay').value = seasonName;
+        document.getElementById('activeSeasonBadge').innerText = seasonName;
+    }
 
     window.toggleCustomExpenseCategory = function(val) {
         document.getElementById('customExpCategoryInput').classList.toggle('hidden', val !== 'CUSTOM');
@@ -595,18 +641,15 @@
 
     window.saveTransportRecord = async function() {
         let date = document.getElementById('transDate').value;
-        let rawSeason = document.getElementById('transSeason').value;
-        let season = rawSeason === 'CUSTOM' ? document.getElementById('customSeasonInput').value.trim() : rawSeason;
+        let season = currentGlobalSeason;
         let farmerName = document.getElementById('transFarmerSelect').value;
         let boxes = parseFloat(document.getElementById('transBoxes').value) || 0;
         let rate = parseFloat(document.getElementById('transRate').value) || 25;
         let notes = document.getElementById('transNotes').value.trim() || '-';
 
         if (!date || !farmerName || boxes <= 0 || !season) {
-            return showToast('Please fill Date, Season, select a Farmer, and Boxes');
+            return showToast('Please fill Date, select a Farmer, and Boxes');
         }
-
-        lastUsedSeason = season;
 
         try {
             await push(ref(db, `${dbPrefix}transport_records`), {
@@ -618,20 +661,19 @@
             document.getElementById('transRate').value = '25';
             document.getElementById('transNotes').value = '';
             document.getElementById('transTotalDisplay').innerText = '0.00';
-            setSeasonDropdownDefaults(lastUsedSeason);
         } catch (error) { showToast("Error: " + error.message); }
     };
 
     window.saveExpenseRecord = async function() {
         let date = document.getElementById('expDate').value;
-        let season = document.getElementById('expSeason').value;
+        let season = currentGlobalSeason;
         let rawCat = document.getElementById('expCategory').value;
         let category = rawCat === 'CUSTOM' ? document.getElementById('customExpCategoryInput').value.trim() : rawCat;
         let amount = parseFloat(document.getElementById('expAmount').value) || 0;
         let notes = document.getElementById('expNotes').value.trim() || '-';
 
         if (!date || !category || amount <= 0 || !season) {
-            return showToast('Please fill Date, Category, Season, and Amount');
+            return showToast('Please fill Date, Category, and Amount');
         }
 
         try {
@@ -648,24 +690,6 @@
         } catch (error) { showToast("Error: " + error.message); }
     };
 
-    function setSeasonDropdownDefaults(seasonName) {
-        const transSelect = document.getElementById('transSeason');
-        let optionExists = Array.from(transSelect.options).some(o => o.value === seasonName);
-        if (!optionExists && seasonName) {
-            let opt = document.createElement('option');
-            opt.value = seasonName;
-            opt.text = seasonName;
-            transSelect.insertBefore(opt, transSelect.lastElementChild);
-        }
-        transSelect.value = seasonName;
-        document.getElementById('customSeasonInput').classList.add('hidden');
-
-        const expSelect = document.getElementById('expSeason');
-        if (Array.from(expSelect.options).some(o => o.value === seasonName)) {
-            expSelect.value = seasonName;
-        }
-    }
-
     function loadTransportData() {
         onValue(ref(db, `${dbPrefix}transport_records`), (snapshot) => {
             cloudTransportRecords = [];
@@ -676,15 +700,20 @@
                 if (!item.rate) item.rate = 25;
                 if (!item.totalFare) item.totalFare = item.boxes * item.rate;
                 cloudTransportRecords.push(item);
+                addSeasonOptionToGlobalDropdown(item.season);
             });
 
-            if (cloudTransportRecords.length > 0) {
+            if (cloudTransportRecords.length > 0 && currentGlobalSeason === "2026") {
                 let sorted = [...cloudTransportRecords].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                if (sorted[0].season) lastUsedSeason = sorted[0].season;
+                if (sorted[0].season) {
+                    currentGlobalSeason = sorted[0].season;
+                    addSeasonOptionToGlobalDropdown(currentGlobalSeason);
+                }
             }
 
-            populateSeasonFilter();
-            setSeasonDropdownDefaults(lastUsedSeason);
+            document.getElementById('transSeasonDisplay').value = currentGlobalSeason;
+            document.getElementById('expSeasonDisplay').value = currentGlobalSeason;
+            document.getElementById('activeSeasonBadge').innerText = currentGlobalSeason;
             renderTransportRecords();
             renderOverview();
         });
@@ -698,6 +727,7 @@
                 item.id = child.key;
                 if (!item.season) item.season = "2026";
                 cloudExpenseRecords.push(item);
+                addSeasonOptionToGlobalDropdown(item.season);
             });
             renderExpenseRecords();
             renderOverview();
@@ -716,20 +746,10 @@
         });
     }
 
-    function populateSeasonFilter() {
-        const select = document.getElementById('overviewSeasonFilter');
-        const currentVal = select.value;
-        const seasons = new Set(["2026", "2027", "2028"]);
-        cloudTransportRecords.forEach(r => { if (r.season) seasons.add(r.season); });
-        cloudExpenseRecords.forEach(e => { if (e.season) seasons.add(e.season); });
-
-        let html = `<option value="ALL">🌐 Overall (All Seasons)</option>`;
-        Array.from(seasons).sort().forEach(s => {
-            html += `<option value="${s}">🌦️ ${s}</option>`;
-        });
-        select.innerHTML = html;
-        if (Array.from(seasons).includes(currentVal)) select.value = currentVal;
-    }
+    window.resetMonthlyFilter = function() {
+        document.getElementById('filterMonthInput').value = '';
+        renderOverview();
+    };
 
     window.toggleAllDays = function() {
         allDaysExpanded = !allDaysExpanded;
@@ -738,19 +758,26 @@
     };
 
     window.renderOverview = function() {
-        const selectedSeason = document.getElementById('overviewSeasonFilter').value;
+        const selectedSeason = currentGlobalSeason;
+        const selectedMonth = document.getElementById('filterMonthInput').value; // format YYYY-MM
         
-        const filteredTransport = selectedSeason === 'ALL' 
-            ? cloudTransportRecords 
+        let filteredTransport = selectedSeason === 'ALL' 
+            ? [...cloudTransportRecords] 
             : cloudTransportRecords.filter(r => r.season === selectedSeason);
 
-        const filteredExpenses = selectedSeason === 'ALL'
-            ? cloudExpenseRecords
+        let filteredExpenses = selectedSeason === 'ALL'
+            ? [...cloudExpenseRecords]
             : cloudExpenseRecords.filter(e => e.season === selectedSeason);
 
-        document.getElementById('farmerBreakdownSubtitle').innerText = selectedSeason === 'ALL'
-            ? "Showing overall earnings across all seasons"
-            : `Showing earnings for ${selectedSeason}`;
+        // Apply Monthly Date Filter if selected
+        if (selectedMonth) {
+            filteredTransport = filteredTransport.filter(r => r.date && r.date.startsWith(selectedMonth));
+            filteredExpenses = filteredExpenses.filter(e => e.date && e.date.startsWith(selectedMonth));
+        }
+
+        let subText = selectedSeason === 'ALL' ? "Showing overall earnings" : `Showing earnings for season: ${selectedSeason}`;
+        if (selectedMonth) subText += ` | Month: ${selectedMonth}`;
+        document.getElementById('farmerBreakdownSubtitle').innerText = subText;
 
         let totalEarned = 0;
         let totalBoxes = 0;
@@ -759,7 +786,6 @@
         const farmerMap = {};
         const dayMap = {};
 
-        // Aggregate Earnings & Boxes
         filteredTransport.forEach(r => {
             totalEarned += r.totalFare || 0;
             totalBoxes += r.boxes || 0;
@@ -778,7 +804,6 @@
             dayMap[dStr].farmers[fName] += r.boxes || 0;
         });
 
-        // Aggregate Expenses
         filteredExpenses.forEach(e => {
             totalExpenses += e.amount || 0;
             const dStr = e.date || 'Unknown';
@@ -799,7 +824,7 @@
         const sortedDays = Object.entries(dayMap).sort((a, b) => new Date(b[0]) - new Date(a[0]));
 
         if (sortedDays.length === 0) {
-            dayContainer.innerHTML = '<div class="text-center text-slate-400 py-4">No daily records yet.</div>';
+            dayContainer.innerHTML = '<div class="text-center text-slate-400 py-4">No daily records for this filter.</div>';
         } else {
             let latestEntry = sortedDays[0];
             let remainingEntries = sortedDays.slice(1);
@@ -889,14 +914,14 @@
                     <td class="p-2.5 text-left font-bold text-slate-800">${sName}</td>
                     <td class="p-2.5 text-center text-slate-600">${data.farmers.size}</td>
                     <td class="p-2.5 text-center font-semibold text-slate-700">${data.boxes.toLocaleString('en-IN')}</td>
-                    <td class="p-2.5 text-right font-black text-emerald-700">₹${data.earned.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (Net: ₹${(data.earned - data.expenses).toLocaleString('en-IN')})</td>
+                    <td class="p-2.5 text-right font-black text-emerald-700">₹${data.earned.toLocaleString('en-IN')} (Net: ₹${(data.earned - data.expenses).toLocaleString('en-IN')})</td>
                 </tr>
             `).join('');
         }
     };
 
     window.shareFarmerSummaryWhatsApp = function() {
-        const selectedSeason = document.getElementById('overviewSeasonFilter').value;
+        const selectedSeason = currentGlobalSeason;
         const filteredRecords = selectedSeason === 'ALL' 
             ? cloudTransportRecords 
             : cloudTransportRecords.filter(r => r.season === selectedSeason);
@@ -933,11 +958,15 @@
         let search = document.getElementById('searchTrans').value.toLowerCase().trim();
         tbody.innerHTML = '';
 
-        let filtered = cloudTransportRecords.filter(r => search === '' || r.farmerName.toLowerCase().includes(search));
+        let filtered = currentGlobalSeason === 'ALL'
+            ? cloudTransportRecords
+            : cloudTransportRecords.filter(r => r.season === currentGlobalSeason);
+
+        filtered = filtered.filter(r => search === '' || r.farmerName.toLowerCase().includes(search));
         filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-4">No transport records found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-4">No transport records found for this season.</td></tr>';
             tfoot.innerHTML = '';
             return;
         }
@@ -981,11 +1010,15 @@
         let search = document.getElementById('searchExp').value.toLowerCase().trim();
         tbody.innerHTML = '';
 
-        let filtered = cloudExpenseRecords.filter(e => search === '' || e.category.toLowerCase().includes(search));
+        let filtered = currentGlobalSeason === 'ALL'
+            ? cloudExpenseRecords
+            : cloudExpenseRecords.filter(e => e.season === currentGlobalSeason);
+
+        filtered = filtered.filter(e => search === '' || e.category.toLowerCase().includes(search));
         filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-400 py-4">No expense records found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-400 py-4">No expense records found for this season.</td></tr>';
             tfoot.innerHTML = '';
             return;
         }
@@ -1172,7 +1205,7 @@
     function renderDispatcherHistoryTable() {
         let tbody = document.getElementById('dispatcherHistoryTableBody');
         if (!tbody) return;
-        tbody.indexHtml = '';
+        tbody.innerHTML = '';
 
         if (dispatcherHistoryList.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-4">No dispatcher history yet.</td></tr>';
