@@ -36,19 +36,19 @@
       <div class="w-16 h-16 bg-sky-50 text-sky-700 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-inner">🚛</div>
       <div>
         <h2 class="text-xl font-extrabold text-slate-800">Yumika Designs</h2>
-        <p class="text-xs text-slate-500 mt-1">Please sign in with Guruswamy account</p>
+        <p class="text-xs text-slate-500 mt-1">Please sign in with your Admin Panel credentials</p>
       </div>
 
       <div class="space-y-3 pt-2 text-left">
         <div>
-          <label class="block text-xs font-bold text-slate-600 mb-1">User ID</label>
-          <input type="text" id="loginUser" placeholder="Enter user id (e.g. Guruswamy)" class="w-full rounded-xl p-3 text-sm">
+          <label class="block text-xs font-bold text-slate-600 mb-1">User Name</label>
+          <input type="text" id="loginUser" placeholder="Enter your username" class="w-full rounded-xl p-3 text-sm">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1">Password</label>
           <input type="password" id="loginPass" placeholder="Enter password" class="w-full rounded-xl p-3 text-sm">
         </div>
-        <div id="loginError" class="text-xs text-rose-600 font-semibold text-center hidden">Invalid User ID or Password!</div>
+        <div id="loginError" class="text-xs text-rose-600 font-semibold text-center hidden">Invalid credentials, account locked, or unauthorized app access!</div>
       </div>
 
       <button onclick="handleLogin()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl text-sm shadow-lg transition">
@@ -491,15 +491,7 @@
     document.getElementById('expDate').valueAsDate = new Date();
     document.getElementById('dispatchDate').valueAsDate = new Date();
 
-    const VALID_USERS = {
-      guruswamy: { name: 'Guruswamy', pass: '1234' }
-    };
-
     let currentUser = localStorage.getItem('yumika_logged_user') || '';
-    if (currentUser && !VALID_USERS[currentUser.toLowerCase()]) {
-        localStorage.removeItem('yumika_logged_user');
-        currentUser = '';
-    }
     let dbPrefix = currentUser ? `yumika_${currentUser.toLowerCase().replace(/[^a-z0-9]/g, '_')}_` : 'yumika_guest_';
 
     function updateHeaderTitle() {
@@ -515,24 +507,44 @@
         setTimeout(() => { toast.style.opacity = '0'; }, 2500);
     }
 
-    window.handleLogin = function() {
-        let uInput = document.getElementById('loginUser').value.trim().toLowerCase();
+    window.handleLogin = async function() {
+        let uInput = document.getElementById('loginUser').value.trim();
         let pInput = document.getElementById('loginPass').value.trim();
         let errDiv = document.getElementById('loginError');
 
-        const matchedUser = VALID_USERS[uInput];
-        if (!matchedUser || matchedUser.pass !== pInput) {
+        if (!uInput || !pInput) {
             errDiv.classList.remove('hidden');
             return;
         }
 
-        errDiv.classList.add('hidden');
-        currentUser = matchedUser.name;
-        localStorage.setItem('yumika_logged_user', currentUser);
-        dbPrefix = `yumika_${currentUser.toLowerCase().replace(/[^a-z0-9]/g, '_')}_`;
-        updateHeaderTitle();
-        document.getElementById('loginModal').classList.add('hidden');
-        initYumikaApp();
+        let key = uInput.toLowerCase().replace(/[^a-z0-9]/g, '_');
+        
+        try {
+            const snapshot = await get(ref(db, `yumika_system_users/${key}`));
+            if (!snapshot.exists()) {
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            let userData = snapshot.val();
+            
+            // Validate password, active status, and application permission
+            if (userData.password !== pInput || userData.status === 'Locked' || (userData.targetApp !== 'Transport App' && userData.targetApp !== 'Both')) {
+                errDiv.classList.remove('hidden');
+                return;
+            }
+
+            errDiv.classList.add('hidden');
+            currentUser = userData.displayName;
+            localStorage.setItem('yumika_logged_user', currentUser);
+            dbPrefix = `yumika_${currentUser.toLowerCase().replace(/[^a-z0-9]/g, '_')}_`;
+            updateHeaderTitle();
+            document.getElementById('loginModal').classList.add('hidden');
+            initYumikaApp();
+        } catch (e) {
+            console.error(e);
+            errDiv.classList.remove('hidden');
+        }
     };
 
     window.logout = function() {
