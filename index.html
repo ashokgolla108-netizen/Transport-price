@@ -11,12 +11,12 @@
             --text-main: #0f172a;
         }
         body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        input[type="text"], input[type="number"], input[type="date"], input[type="month"], select {
+        input[type="text"], input[type="number"], input[type="date"], select {
             border: 1.5px solid #cbd5e1;
             transition: all 0.2s ease-in-out;
             background-color: #ffffff;
         }
-        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, input[type="month"]:focus, select:focus {
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus {
             border-color: #0284c7 !important;
             box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
             outline: none !important;
@@ -81,20 +81,37 @@
     <!-- ==================== TAB 1: OVERVIEW & ANALYTICS ==================== -->
     <div id="tab-overview" class="space-y-5 tab-content">
       
-      <!-- Custom Date & Monthly Revenue Filter Bar -->
+      <!-- Year & Multiple Months Filter Bar -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
         <div class="flex justify-between items-center">
-          <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">📅 Monthly Revenue Custom Filter:</div>
-          <button onclick="resetMonthlyFilter()" class="text-[11px] font-bold text-sky-600 hover:underline">Clear Filter (Show All Dates)</button>
+          <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">📅 Year & Multiple Months Filter:</div>
+          <button onclick="resetFilters()" class="text-[11px] font-bold text-sky-600 hover:underline">Reset Filters</button>
         </div>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-1">Select Specific Month</label>
-            <input type="month" id="filterMonthInput" onchange="renderOverview()" class="w-full rounded-xl p-2.5 text-xs font-bold text-slate-800">
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">Filter by Year</label>
+            <select id="filterYear" onchange="renderOverview()" class="w-full rounded-xl p-2.5 text-xs font-bold text-slate-800">
+              <option value="ALL">🌐 All Years</option>
+            </select>
           </div>
-          <div class="bg-sky-50 p-2.5 rounded-xl border border-sky-200 text-xs text-sky-900 flex justify-between items-center font-bold">
-            <span>Filter Status:</span>
-            <span id="activeMonthBadge" class="text-sky-800 bg-white px-2.5 py-1 rounded-lg shadow-sm">All Time Records</span>
+          <div>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">Filter by Months (Select Multiple or All)</label>
+            <select id="filterMonths" multiple onchange="renderOverview()" class="w-full rounded-xl p-2 text-xs font-bold text-slate-800 h-20 bg-slate-50">
+              <option value="ALL" selected>🌐 All Months</option>
+              <option value="01">January</option>
+              <option value="02">February</option>
+              <option value="03">March</option>
+              <option value="04">April</option>
+              <option value="05">May</option>
+              <option value="06">June</option>
+              <option value="07">July</option>
+              <option value="08">August</option>
+              <option value="09">September</option>
+              <option value="10">October</option>
+              <option value="11">November</option>
+              <option value="12">December</option>
+            </select>
+            <div class="text-[10px] text-slate-400 mt-1">💡 Hold Ctrl (or Cmd on Mac) to select multiple months.</div>
           </div>
         </div>
       </div>
@@ -605,6 +622,24 @@
         } catch (error) { showToast("Error: " + error.message); }
     };
 
+    function populateYearDropdown() {
+        const yearSelect = document.getElementById('filterYear');
+        const currentSelected = yearSelect.value;
+        const yearsSet = new Set();
+
+        cloudTransportRecords.forEach(r => { if (r.date) yearsSet.add(r.date.split('-')[0]); });
+        cloudExpenseRecords.forEach(e => { if (e.date) yearsSet.add(e.date.split('-')[0]); });
+
+        let html = `<option value="ALL">🌐 All Years</option>`;
+        Array.from(yearsSet).sort().reverse().forEach(y => {
+            html += `<option value="${y}">${y}</option>`;
+        });
+        yearSelect.innerHTML = html;
+        if (Array.from(yearsSet).includes(currentSelected)) {
+            yearSelect.value = currentSelected;
+        }
+    }
+
     function loadTransportData() {
         onValue(ref(db, `${dbPrefix}transport_records`), (snapshot) => {
             cloudTransportRecords = [];
@@ -615,6 +650,7 @@
                 if (!item.totalFare) item.totalFare = item.boxes * item.rate;
                 cloudTransportRecords.push(item);
             });
+            populateYearDropdown();
             renderTransportRecords();
             renderOverview();
         });
@@ -628,6 +664,7 @@
                 item.id = child.key;
                 cloudExpenseRecords.push(item);
             });
+            populateYearDropdown();
             renderExpenseRecords();
             renderOverview();
         });
@@ -645,8 +682,12 @@
         });
     }
 
-    window.resetMonthlyFilter = function() {
-        document.getElementById('filterMonthInput').value = '';
+    window.resetFilters = function() {
+        document.getElementById('filterYear').value = 'ALL';
+        const monthSelect = document.getElementById('filterMonths');
+        for (let i = 0; i < monthSelect.options.length; i++) {
+            monthSelect.options[i].selected = (monthSelect.options[i].value === 'ALL');
+        }
         renderOverview();
     };
 
@@ -657,20 +698,49 @@
     };
 
     window.renderOverview = function() {
-        const selectedMonth = document.getElementById('filterMonthInput').value; // format YYYY-MM
+        const selectedYear = document.getElementById('filterYear').value;
+        const monthSelect = document.getElementById('filterMonths');
         
+        let selectedMonths = [];
+        for (let i = 0; i < monthSelect.options.length; i++) {
+            if (monthSelect.options[i].selected) {
+                selectedMonths.push(monthSelect.options[i].value);
+            }
+        }
+        if (selectedMonths.includes('ALL') || selectedMonths.length === 0) {
+            selectedMonths = [];
+        }
+
         let filteredTransport = [...cloudTransportRecords];
         let filteredExpenses = [...cloudExpenseRecords];
 
-        if (selectedMonth) {
-            filteredTransport = filteredTransport.filter(r => r.date && r.date.startsWith(selectedMonth));
-            filteredExpenses = filteredExpenses.filter(e => e.date && e.date.startsWith(selectedMonth));
-            document.getElementById('activeMonthBadge').innerText = `Month: ${selectedMonth}`;
-            document.getElementById('farmerBreakdownSubtitle').innerText = `Showing earnings for month: ${selectedMonth}`;
-        } else {
-            document.getElementById('activeMonthBadge').innerText = 'All Time Records';
-            document.getElementById('farmerBreakdownSubtitle').innerText = 'Showing overall earnings across all dates';
+        // Filter by Year
+        if (selectedYear !== 'ALL') {
+            filteredTransport = filteredTransport.filter(r => r.date && r.date.startsWith(selectedYear));
+            filteredExpenses = filteredExpenses.filter(e => e.date && e.date.startsWith(selectedYear));
         }
+
+        // Filter by Multiple Months
+        if (selectedMonths.length > 0) {
+            filteredTransport = filteredTransport.filter(r => {
+                if (!r.date) return false;
+                let m = r.date.split('-')[1];
+                return selectedMonths.includes(m);
+            });
+            filteredExpenses = filteredExpenses.filter(e => {
+                if (!e.date) return false;
+                let m = e.date.split('-')[1];
+                return selectedMonths.includes(m);
+            });
+        }
+
+        let subtitleText = `Year: ${selectedYear}`;
+        if (selectedMonths.length > 0) {
+            subtitleText += ` | Months selected: ${selectedMonths.length}`;
+        } else {
+            subtitleText += ` | All Months`;
+        }
+        document.getElementById('farmerBreakdownSubtitle').innerText = subtitleText;
 
         let totalEarned = 0;
         let totalBoxes = 0;
@@ -785,10 +855,10 @@
     };
 
     window.shareFarmerSummaryWhatsApp = function() {
-        const selectedMonth = document.getElementById('filterMonthInput').value;
+        const selectedYear = document.getElementById('filterYear').value;
         let filteredRecords = [...cloudTransportRecords];
-        if (selectedMonth) {
-            filteredRecords = filteredRecords.filter(r => r.date && r.date.startsWith(selectedMonth));
+        if (selectedYear !== 'ALL') {
+            filteredRecords = filteredRecords.filter(r => r.date && r.date.startsWith(selectedYear));
         }
 
         if (filteredRecords.length === 0) return showToast("No data to share");
@@ -804,7 +874,7 @@
             farmerMap[fName].earned += r.totalFare || 0;
         });
 
-        let title = selectedMonth ? `Transport Report (${selectedMonth})` : 'Overall Transport Report';
+        let title = selectedYear !== 'ALL' ? `Transport Report (${selectedYear})` : 'Overall Transport Report';
         let msg = `🚛 *Yumika Designs - ${title}*\n`;
         msg += `📦 *Total Boxes:* ${totalBoxes}\n`;
         msg += `💰 *Total Revenue:* ₹${totalEarned.toLocaleString('en-IN')}\n\n`;
