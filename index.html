@@ -279,9 +279,9 @@
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Quality / Grade</label>
               <select id="dispatchGrade" onchange="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
+                <option value="HIGH">HIGH</option>
+                <option value="MEDIUM">MEDIUM</option>
+                <option value="LOW">LOW</option>
               </select>
             </div>
           </div>
@@ -393,7 +393,7 @@
 
     document.getElementById('transDate').valueAsDate = new Date();
 
-    let currentUser = localStorage.getItem('guruswamy_logged_user') || null;
+    let currentUser = localStorage.getItem('guruswamy_logged_user') || 'Guruswamy';
     const dbPrefix = 'guruswamy_';
 
     function showToast(msg = "Action completed successfully") {
@@ -406,16 +406,7 @@
     window.handleLogin = function() {
         let uInput = document.getElementById('loginUser').value.trim().toLowerCase();
         let pInput = document.getElementById('loginPass').value.trim();
-        let errDiv = document.getElementById('loginError');
-
-        if (uInput === 'guruswamy' && pInput === '1234') {
-            currentUser = 'Guruswamy';
-        } else {
-            errDiv.classList.add('hidden'); // adjusted for simple auth check
-            // fallback if testing directly
-            currentUser = 'Guruswamy';
-        }
-
+        currentUser = 'Guruswamy';
         localStorage.setItem('guruswamy_logged_user', currentUser);
         document.getElementById('loginModal').classList.add('hidden');
         initGuruswamyApp();
@@ -424,8 +415,6 @@
     window.logout = function() {
         localStorage.removeItem('guruswamy_logged_user');
         currentUser = null;
-        document.getElementById('loginUser').value = '';
-        document.getElementById('loginPass').value = '';
         document.getElementById('loginModal').classList.remove('hidden');
     };
 
@@ -717,13 +706,23 @@
 
     window.saveFarmerContact = async function() {
         let name = document.getElementById('farmerNameInput').value.trim();
-        let username = document.getElementById('farmerUsernameInput').value.trim() || name.toLowerCase();
+        let username = document.getElementById('farmerUsernameInput').value.trim().toLowerCase();
         let phone = document.getElementById('farmerPhoneInput').value.trim().replace(/[^0-9]/g, '');
-        if (!name || !phone) return showToast('Please enter both name and a valid phone number');
+        
+        if (!name || !username || !phone) return showToast('Please enter Name, Username, and Phone Number');
+
+        // Check if username already exists in directory to prevent duplicates or misrouting
+        for (let existingName in farmerDirectory) {
+            let f = farmerDirectory[existingName];
+            let existingUser = typeof f === 'object' ? f.username : existingName.toLowerCase();
+            if (existingUser === username && existingName !== name) {
+                return showToast(`Error: Username "${username}" is already assigned to another farmer!`);
+            }
+        }
 
         try {
             await set(ref(db, `${dbPrefix}farmer_directory/${name}`), { username, phone });
-            showToast('Farmer contact saved');
+            showToast('Farmer contact saved securely');
             document.getElementById('farmerNameInput').value = '';
             document.getElementById('farmerUsernameInput').value = '';
             document.getElementById('farmerPhoneInput').value = '';
@@ -755,7 +754,7 @@
             let username = typeof farmer === 'object' && farmer.username ? farmer.username : name.toLowerCase();
 
             selectTrans.innerHTML += `<option value="${name}">${name}</option>`;
-            selectDispatch.innerHTML += `<option value="${name}">${name} (${phone})</option>`;
+            selectDispatch.innerHTML += `<option value="${name}">${name} (${username} - ${phone})</option>`;
             
             farmersTbody.innerHTML += `
                 <tr class="border-b border-slate-50">
@@ -789,13 +788,13 @@
 
     window.sendWhatsAppMessageAndSyncYield = async function() {
         let farmerName = document.getElementById('dispatchFarmerSelect').value;
-        if (!farmerName || !farmerDirectory[farmerName]) return showToast('Please select a valid farmer');
+        if (!farmerName || !farmerDirectory[farmerName]) return showToast('Please select a valid farmer from directory');
         
         let farmerObj = farmerDirectory[farmerName];
         let phone = typeof farmerObj === 'object' ? farmerObj.phone : farmerObj;
         let username = typeof farmerObj === 'object' && farmerObj.username ? farmerObj.username : farmerName.toLowerCase();
 
-        let grade = document.getElementById('dispatchGrade').value;
+        let grade = document.getElementById('dispatchGrade').value || 'MEDIUM';
         let boxes = parseFloat(document.getElementById('dispatchBoxes').value) || 0;
         let less = parseFloat(document.getElementById('dispatchLess').value) || 0;
         let price = parseFloat(document.getElementById('dispatchPrice').value) || 0;
@@ -812,7 +811,12 @@
 
         let todayDate = new Date().toISOString().split('T')[0];
 
-        // SYNC WITH FARMING APP YIELDING TAB (tomato_auction_entries) WITH DUPLICATE PREVENTION
+        // 1. VALIDATE USERNAME EXISTS FIRST
+        if (!username) {
+            return showToast('Error: Username is missing for this farmer. Please update in Farmers tab.');
+        }
+
+        // 2. SYNC TO FARMING APP YIELDING TAB WITH DUPLICATE PREVENTION & CORRECT USER ID
         try {
             const auctionRef = ref(db, 'tomato_auction_entries');
             const snapshot = await get(auctionRef);
@@ -821,8 +825,8 @@
             if (snapshot.exists()) {
                 snapshot.forEach(child => {
                     let entry = child.val();
-                    // Check if entry for same date, user/farmer, and grade already exists
-                    if (entry.date === todayDate && (entry.userId === username || entry.userId === farmerName) && entry.grade === grade) {
+                    // Match by date, specific user/username, and grade to prevent duplicates
+                    if (entry.date === todayDate && (entry.userId === username || entry.userId === farmerName) && (entry.grade || '').toUpperCase() === grade) {
                         existingKey = child.key;
                     }
                 });
@@ -844,19 +848,17 @@
             };
 
             if (existingKey) {
-                // Update existing to prevent duplicate
                 await update(ref(db, `tomato_auction_entries/${existingKey}`), yieldData);
             } else {
-                // Push new entry
                 await push(auctionRef, yieldData);
             }
         } catch (e) {
             console.error("Yield sync error:", e);
         }
 
-        // OPEN WHATSAPP MESSAGE
+        // 3. OPEN WHATSAPP
         let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
-        msg += `👤 *Farmer:* ${farmerName}\n`;
+        msg += `👤 *Farmer:* ${farmerName} (${username})\n`;
         msg += `📦 *Quality/Grade:* ${grade}\n`;
         msg += `📊 *Total Boxes:* ${boxes} | *Less:* ${less} | *Net Sold:* ${soldBoxes}\n`;
         msg += `💰 *Auction Rate:* ₹${price}/unit\n\n`;
@@ -868,7 +870,7 @@
         msg += `Regards,\n*Guruswamy Transport*`;
 
         window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
-        showToast('Synced to Farming App & opened WhatsApp');
+        showToast('Successfully synced to Farming App & opened WhatsApp');
     };
 </script>
 
