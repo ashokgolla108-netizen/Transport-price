@@ -95,8 +95,8 @@
             </select>
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-1">Filter by Months (Select Multiple or All)</label>
-            <select id="filterMonths" multiple onchange="renderOverview()" class="w-full rounded-xl p-2 text-xs font-bold text-slate-800 h-20 bg-slate-50">
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">Filter by Months (Select Multiple)</label>
+            <select id="filterMonths" multiple onchange="handleMonthSelectionChange(this)" class="w-full rounded-xl p-2 text-xs font-bold text-slate-800 h-24 bg-slate-50">
               <option value="ALL" selected>🌐 All Months</option>
               <option value="01">January</option>
               <option value="02">February</option>
@@ -111,7 +111,7 @@
               <option value="11">November</option>
               <option value="12">December</option>
             </select>
-            <div class="text-[10px] text-slate-400 mt-1">💡 Hold Ctrl (or Cmd on Mac) to select multiple months.</div>
+            <div class="text-[10px] text-slate-400 mt-1">💡 Hold Ctrl/Cmd to select multiple months. Selecting any month unselects "All Months".</div>
           </div>
         </div>
       </div>
@@ -691,6 +691,34 @@
         renderOverview();
     };
 
+    // Smart Multi-Month Selection: Unselect 'ALL' if individual month chosen, or unselect others if 'ALL' chosen
+    window.handleMonthSelectionChange = function(selectEl) {
+        let allOption = null;
+        let anyIndividualSelected = false;
+
+        for (let i = 0; i < selectEl.options.length; i++) {
+            let opt = selectEl.options[i];
+            if (opt.value === 'ALL') {
+                allOption = opt;
+            } else if (opt.selected) {
+                anyIndividualSelected = true;
+            }
+        }
+
+        // If user clicked an individual month and 'ALL' was selected, unselect 'ALL'
+        if (anyIndividualSelected && allOption && allOption.selected) {
+            allOption.selected = false;
+        }
+
+        // If no months are selected or user explicitly clicked 'ALL', select 'ALL'
+        let currentlySelectedCount = Array.from(selectEl.options).filter(o => o.selected).length;
+        if (currentlySelectedCount === 0 && allOption) {
+            allOption.selected = true;
+        }
+
+        renderOverview();
+    };
+
     window.toggleAllDays = function() {
         allDaysExpanded = !allDaysExpanded;
         document.getElementById('toggleDaysBtn').innerText = allDaysExpanded ? "📁 Collapse Older Days" : "📂 Expand All Days";
@@ -736,7 +764,7 @@
 
         let subtitleText = `Year: ${selectedYear}`;
         if (selectedMonths.length > 0) {
-            subtitleText += ` | Months selected: ${selectedMonths.length}`;
+            subtitleText += ` | Selected Months Count: ${selectedMonths.length}`;
         } else {
             subtitleText += ` | All Months`;
         }
@@ -1109,17 +1137,28 @@
             console.error(e);
         }
 
-        let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
+        // STYLISH MODERN TEXT TEMPLATE
+        let msg = `🌾 *YUMIKA DESIGNS — DISPATCH SUMMARY* 🌾\n`;
+        msg += `────────────────────────\n`;
         msg += `👤 *Farmer:* ${farmerName}\n`;
         msg += `📅 *Date:* ${dispatchDate}\n`;
-        msg += `📦 *Quality/Grade:* ${gradeStr}\n`;
-        msg += `📊 *Total Boxes:* ${boxes} | *Less:* ${less} | *Net Sold:* ${soldBoxes}\n`;
-        msg += `💰 *Auction Rate:* ₹${price}/unit\n\n`;
-        msg += `📈 *Gross Amount:* ₹${gross.toFixed(2)}\n`;
-        msg += `🔻 *Deductions:*\n`;
-        msg += `   • Transport (@₹25): ₹${transportDed.toFixed(2)}\n`;
-        msg += `   • Commission & Rent: ₹${(commDed + rentDed).toFixed(2)}\n`;
-        msg += `💵 *Estimated Net Payable:* ₹${netPayable.toFixed(2)}\n\n`;
+        msg += `📦 *Grade:* ${gradeStr} Quality\n`;
+        msg += `────────────────────────\n`;
+        msg += `📊 *BOX BREAKDOWN*\n`;
+        msg += `• Total Boxes Loaded : *${boxes}*\n`;
+        msg += `• Less / Deduction : *${less}*\n`;
+        msg += `• Net Sold Boxes   : *${soldBoxes}*\n`;
+        msg += `────────────────────────\n`;
+        msg += `💰 *FINANCIAL CALCULATION*\n`;
+        msg += `• Auction Rate     : *₹${price} / unit*\n`;
+        msg += `• Gross Revenue    : *₹${gross.toFixed(2)}*\n`;
+        msg += `────────────────────────\n`;
+        msg += `🔻 *DEDUCTIONS*\n`;
+        msg += `• Transport (@₹25) : *₹${transportDed.toFixed(2)}*\n`;
+        msg += `• Comm. & Rent     : *₹${(commDed + rentDed).toFixed(2)}*\n`;
+        msg += `────────────────────────\n`;
+        msg += `💵 *NET PAYABLE:* *₹${netPayable.toFixed(2)}*\n`;
+        msg += `────────────────────────\n`;
         msg += `Regards,\n*${currentUser || 'Yumika Designs'} Transport*`;
 
         window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
