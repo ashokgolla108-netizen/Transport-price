@@ -271,11 +271,18 @@
         <div class="space-y-3">
           <div class="grid grid-cols-2 gap-3">
             <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Dispatch Date</label>
+              <input type="date" id="dispatchDate" class="w-full rounded-xl p-2.5 text-sm">
+            </div>
+            <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Select Farmer</label>
               <select id="dispatchFarmerSelect" onchange="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
                 <option value="">-- Select Farmer --</option>
               </select>
             </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Quality / Grade</label>
               <select id="dispatchGrade" onchange="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
@@ -284,9 +291,13 @@
                 <option value="Low">Low</option>
               </select>
             </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Auction Price (₹)</label>
+              <input type="number" id="dispatchPrice" placeholder="300" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
+            </div>
           </div>
 
-          <div class="grid grid-cols-3 gap-3">
+          <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">No. of Boxes</label>
               <input type="number" id="dispatchBoxes" placeholder="100" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
@@ -294,10 +305,6 @@
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Less Boxes</label>
               <input type="number" id="dispatchLess" value="5" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-600 mb-1">Auction Price (₹)</label>
-              <input type="number" id="dispatchPrice" placeholder="300" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
             </div>
           </div>
 
@@ -315,6 +322,29 @@
           <button onclick="sendWhatsAppMessageAndSyncYield()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5">
             <span>💬</span> Send WhatsApp & Sync to Farming App
           </button>
+        </div>
+      </section>
+
+      <!-- DISPATCHER LOG TABLE FOR EDITING / DELETING -->
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">📋 Synced Auction Entries Management</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-sky-50 text-sky-900">
+                <th class="p-2 text-center">Date</th>
+                <th class="p-2 text-left">Farmer</th>
+                <th class="p-2 text-center">Grade</th>
+                <th class="p-2 text-center">Units</th>
+                <th class="p-2 text-center">Less</th>
+                <th class="p-2 text-center">Rate</th>
+                <th class="p-2 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="dispatcherTableBody">
+              <tr><td colspan="7" class="text-center text-slate-400 py-4">No synced auction entries yet.</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
     </div>
@@ -405,6 +435,7 @@
     const db = getDatabase(app);
 
     document.getElementById('transDate').valueAsDate = new Date();
+    document.getElementById('dispatchDate').valueAsDate = new Date();
 
     let currentUser = localStorage.getItem('guruswamy_logged_user') || 'Guruswamy';
     const dbPrefix = 'guruswamy_';
@@ -437,10 +468,12 @@
 
     let cloudTransportRecords = [];
     let farmerDirectory = {};
+    let auctionRecordsList = [];
 
     function initGuruswamyApp() {
         loadTransportData();
         loadFarmerDirectory();
+        loadAuctionRecords();
     }
 
     window.switchTab = function(tabName) {
@@ -509,6 +542,76 @@
             renderOverview();
         });
     }
+
+    function loadAuctionRecords() {
+        onValue(ref(db, 'tomato_auction_entries'), (snapshot) => {
+            auctionRecordsList = [];
+            snapshot.forEach(child => {
+                let item = child.val();
+                item.id = child.key;
+                auctionRecordsList.push(item);
+            });
+            renderAuctionRecordsTable();
+        });
+    }
+
+    function renderAuctionRecordsTable() {
+        let tbody = document.getElementById('dispatcherTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (auctionRecordsList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-400 py-4">No synced auction entries yet.</td></tr>';
+            return;
+        }
+
+        auctionRecordsList.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+        auctionRecordsList.forEach(r => {
+            let grade = r.grade || r.Grade || r.quality || r.Quality || 'MEDIUM';
+            let units = r.units !== undefined ? r.units : (r.totalBoxes !== undefined ? r.totalBoxes : (r.boxes !== undefined ? r.boxes : 0));
+            let less = r.less !== undefined ? r.less : (r.lessBoxes !== undefined ? r.lessBoxes : 0);
+            let rate = r.rate !== undefined ? r.rate : (r.auctionPrice !== undefined ? r.auctionPrice : 0);
+
+            tbody.innerHTML += `
+                <tr class="border-b border-slate-50 hover:bg-sky-50/40">
+                    <td class="p-2 text-center">${r.date || '-'}</td>
+                    <td class="p-2 text-left font-bold text-slate-800">${r.farmerName || r.userId || '-'}</td>
+                    <td class="p-2 text-center"><span class="bg-sky-100 text-sky-900 px-2 py-0.5 rounded-full font-bold text-[10px]">${grade}</span></td>
+                    <td class="p-2 text-center font-semibold">${units}</td>
+                    <td class="p-2 text-center text-rose-600">${less}</td>
+                    <td class="p-2 text-center font-extrabold text-sky-800">₹${rate}</td>
+                    <td class="p-2 text-center space-x-1">
+                        <button onclick="editAuctionRecord('${r.id}')" class="text-sky-600 font-bold hover:underline">Edit</button>
+                        <button onclick="deleteAuctionRecord('${r.id}')" class="text-rose-600 font-bold hover:underline">Del</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    window.deleteAuctionRecord = async function(id) {
+        if (confirm("Delete this synced auction entry?")) {
+            await fbRemove(ref(db, `tomato_auction_entries/${id}`));
+            showToast("Auction record deleted");
+        }
+    };
+
+    window.editAuctionRecord = function(id) {
+        let r = auctionRecordsList.find(x => x.id === id);
+        if (!r) return;
+        document.getElementById('dispatchDate').value = r.date || new Date().toISOString().split('T')[0];
+        document.getElementById('dispatchFarmerSelect').value = r.farmerName || '';
+        document.getElementById('dispatchGrade').value = r.grade || r.Grade || 'High';
+        document.getElementById('dispatchBoxes').value = r.units || r.totalBoxes || r.boxes || '';
+        document.getElementById('dispatchLess').value = r.less !== undefined ? r.less : (r.lessBoxes || 5);
+        document.getElementById('dispatchPrice').value = r.rate || r.auctionPrice || '';
+        updateDispatchPreview();
+        // Delete old entry so submitting will replace it cleanly
+        fbRemove(ref(db, `tomato_auction_entries/${id}`));
+        showToast("Loaded entry into form for editing. Click Send & Sync to save changes.");
+        switchTab('whatsapp');
+    };
 
     function populateSeasonFilter() {
         const select = document.getElementById('overviewSeasonFilter');
@@ -791,8 +894,11 @@
     };
 
     window.sendWhatsAppMessageAndSyncYield = async function() {
+        let dispatchDate = document.getElementById('dispatchDate').value;
         let farmerName = document.getElementById('dispatchFarmerSelect').value;
-        if (!farmerName || !farmerDirectory[farmerName]) return showToast('Please select a valid farmer from directory');
+        if (!dispatchDate || !farmerName || !farmerDirectory[farmerName]) {
+            return showToast('Please select a Date and a valid Farmer from directory');
+        }
         
         let farmerObj = farmerDirectory[farmerName];
         let phone = typeof farmerObj === 'object' ? farmerObj.phone : farmerObj;
@@ -820,39 +926,33 @@
         let totalDeductions = transportDed + commDed + rentDed;
         let netPayable = gross - totalDeductions;
 
-        let todayDate = new Date().toISOString().split('T')[0];
-
-        // SYNC TO FARMING APP YIELDING TAB WITH AGGRESSIVE CLEANUP & OVERWRITE
+        // SYNC TO FARMING APP YIELDING TAB WITH SATURATED KEY MAPPING
         try {
             const auctionRef = ref(db, 'tomato_auction_entries');
-            const snapshot = await get(auctionRef);
-
-            // Clean up any existing broken entries for today and this user to avoid conflicts
-            if (snapshot.exists()) {
-                let promises = [];
-                snapshot.forEach(child => {
-                    let entry = child.val();
-                    if (entry.date === todayDate && (entry.userId === username || entry.farmerName === farmerName)) {
-                        promises.push(fbRemove(ref(db, `tomato_auction_entries/${child.key}`)));
-                    }
-                });
-                await Promise.all(promises);
-            }
-
-            // Push a fresh, perfectly structured record that satisfies every key your farming app checks
+            
             const yieldData = {
                 userId: username,
                 farmerName: farmerName,
-                date: todayDate,
+                date: dispatchDate,
                 grade: gradeUpper,
+                Grade: gradeUpper,
                 quality: gradeLower,
+                Quality: gradeStr,
                 units: boxes,
+                Units: boxes,
                 totalBoxes: boxes,
-                lessBoxes: less,
+                TotalBoxes: boxes,
+                boxes: boxes,
+                Boxes: boxes,
                 less: less,
+                Less: less,
+                lessBoxes: less,
+                LessBoxes: less,
                 netBoxes: soldBoxes,
                 rate: price,
+                Rate: price,
                 auctionPrice: price,
+                AuctionPrice: price,
                 grossAmount: gross,
                 deductions: totalDeductions,
                 netPayable: netPayable,
@@ -860,13 +960,16 @@
             };
 
             await push(auctionRef, yieldData);
+            showToast('Successfully synced to Farming App & added to dispatch logs!');
         } catch (e) {
             console.error("Yield sync error:", e);
+            showToast("Sync error: " + e.message);
         }
 
         // OPEN WHATSAPP
         let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
         msg += `👤 *Farmer:* ${farmerName} (${username})\n`;
+        msg += `📅 *Date:* ${dispatchDate}\n`;
         msg += `📦 *Quality/Grade:* ${gradeStr}\n`;
         msg += `📊 *Total Boxes:* ${boxes} | *Less:* ${less} | *Net Sold:* ${soldBoxes}\n`;
         msg += `💰 *Auction Rate:* ₹${price}/unit\n\n`;
@@ -878,7 +981,6 @@
         msg += `Regards,\n*Guruswamy Transport*`;
 
         window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
-        showToast('Successfully synced to Farming App & opened WhatsApp');
     };
 </script>
 
