@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Guruswamy Transportation & Price Dispatcher</title>
+    <title>Guruswamy Transportation & Price Dispatcher</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -105,11 +105,11 @@
         </div>
       </div>
 
-      <!-- DAY-WISE SUMMARY (Latest visible, remaining in collapsible dropdown) -->
+      <!-- DAY-WISE SUMMARY (Latest Expanded, Others Collapsible) -->
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
           <h2 class="text-base font-bold text-slate-800">📅 Day-wise Summary</h2>
-          <button onclick="toggleRemainingDays()" id="toggleDaysBtn" class="text-xs font-bold text-sky-700 hover:underline">📂 Expand All Days</button>
+          <button onclick="toggleAllDays()" id="toggleDaysBtn" class="text-xs font-bold text-sky-700 hover:underline">📂 Expand All Days</button>
         </div>
         <div class="space-y-2.5" id="daySummaryContainer">
           <div class="text-center text-slate-400 py-4">No daily records yet.</div>
@@ -295,7 +295,6 @@
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Less Boxes</label>
-              <!-- Less default explicitly kept blank as requested -->
               <input type="number" id="dispatchLess" placeholder="e.g. 5" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
             </div>
           </div>
@@ -426,9 +425,7 @@
 
     function updateHeaderTitle() {
         let titleEl = document.getElementById('headerTitle');
-        let pageTitleEl = document.getElementById('pageTitle');
-        if (titleEl) titleEl.innerText = `${currentUser} Transportation`;
-        if (pageTitleEl) pageTitleEl.innerText = `${currentUser} - Transport & Dispatcher`;
+        if (titleEl) titleEl.innerText = currentUser;
     }
     updateHeaderTitle();
 
@@ -463,21 +460,15 @@
     let cloudTransportRecords = [];
     let dispatcherHistoryList = [];
     let farmerDirectory = {};
-    let remainingDaysExpanded = false;
+    let allDaysExpanded = false;
 
     function initGuruswamyApp() {
         loadTransportData();
         loadFarmerDirectory();
         loadDispatcherHistory();
-        
-        let savedTab = localStorage.getItem('guruswamy_active_tab') || 'overview';
-        switchTab(savedTab, false);
     }
 
-    window.switchTab = function(tabName, save = true) {
-        if (save) {
-            localStorage.setItem('guruswamy_active_tab', tabName);
-        }
+    window.switchTab = function(tabName) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.getElementById('tab-' + tabName).classList.remove('hidden');
         
@@ -526,6 +517,7 @@
             });
             showToast('Transport record saved successfully');
             
+            // RESET FORM COMPLETELY (Resetting Rate back to 25, clearing boxes & notes)
             document.getElementById('transBoxes').value = '';
             document.getElementById('transRate').value = '25';
             document.getElementById('transNotes').value = '';
@@ -576,16 +568,10 @@
         if (Array.from(seasons).includes(currentVal)) select.value = currentVal;
     }
 
-    window.toggleRemainingDays = function() {
-        remainingDaysExpanded = !remainingDaysExpanded;
-        const dropdownEl = document.getElementById('remainingDaysDropdown');
-        const btnEl = document.getElementById('toggleDaysBtn');
-        if (dropdownEl) {
-            dropdownEl.classList.toggle('hidden', !remainingDaysExpanded);
-        }
-        if (btnEl) {
-            btnEl.innerText = remainingDaysExpanded ? "📁 Collapse Older Days" : "📂 Expand All Days";
-        }
+    window.toggleAllDays = function() {
+        allDaysExpanded = !allDaysExpanded;
+        document.getElementById('toggleDaysBtn').innerText = allDaysExpanded ? "📁 Collapse Older Days" : "📂 Expand All Days";
+        renderOverview();
     };
 
     window.renderOverview = function() {
@@ -661,7 +647,7 @@
             let containerHtml = renderCardHtml(latestEntry, true);
 
             if (remainingEntries.length > 0) {
-                let dropdownDisplayClass = remainingDaysExpanded ? "" : "hidden";
+                let dropdownDisplayClass = allDaysExpanded ? "" : "hidden";
                 containerHtml += `
                     <div id="remainingDaysDropdown" class="space-y-2.5 pt-1 ${dropdownDisplayClass}">
                         ${remainingEntries.map(entry => renderCardHtml(entry, false)).join('')}
@@ -733,7 +719,7 @@
         });
 
         let title = selectedSeason === 'ALL' ? 'Overall Transport Report' : `Season Report (${selectedSeason})`;
-        let msg = `🚛 *${currentUser} Transport - ${title}*\n`;
+        let msg = `🚛 *Guruswamy Transport - ${title}*\n`;
         msg += `📦 *Total Boxes:* ${totalBoxes}\n`;
         msg += `💰 *Total Revenue:* ₹${totalEarned.toLocaleString('en-IN')}\n\n`;
         msg += `👨‍🌾 *Farmer-wise Breakdown:*\n`;
@@ -903,6 +889,7 @@
         let totalDeductions = transportDed + commDed + rentDed;
         let netPayable = gross - totalDeductions;
 
+        // SAVE TO DISPATCHER HISTORY IN FIREBASE
         try {
             await push(ref(db, `${dbPrefix}dispatcher_history`), {
                 date: dispatchDate,
@@ -915,6 +902,7 @@
                 timestamp: Date.now()
             });
 
+            // RESET DISPATCHER FORM
             document.getElementById('dispatchBoxes').value = '';
             document.getElementById('dispatchLess').value = '';
             document.getElementById('dispatchPrice').value = '';
@@ -926,6 +914,7 @@
             console.error(e);
         }
 
+        // OPEN WHATSAPP
         let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
         msg += `👤 *Farmer:* ${farmerName}\n`;
         msg += `📅 *Date:* ${dispatchDate}\n`;
