@@ -389,7 +389,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, push, remove, onValue, set, get, update } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, push, remove, onValue, set, get, update, remove as fbRemove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDWBw7KI3VG7M9FA00_DISNwVOTdAw5Rwg",
@@ -802,8 +802,10 @@
             return showToast('Error: Selected farmer does not have a valid system username assigned.');
         }
 
-        let gradeUpper = (document.getElementById('dispatchGrade').value || 'MEDIUM').toUpperCase();
-        let gradeLower = gradeUpper.toLowerCase(); // e.g. "high", "medium", "low"
+        let gradeStr = document.getElementById('dispatchGrade').value || 'High';
+        let gradeUpper = gradeStr.toUpperCase(); // "HIGH"
+        let gradeLower = gradeStr.toLowerCase(); // "high"
+        
         let boxes = parseFloat(document.getElementById('dispatchBoxes').value) || 0;
         let less = parseFloat(document.getElementById('dispatchLess').value) || 0;
         let price = parseFloat(document.getElementById('dispatchPrice').value) || 0;
@@ -820,23 +822,24 @@
 
         let todayDate = new Date().toISOString().split('T')[0];
 
-        // SYNC TO FARMING APP YIELDING TAB WITH ALL LOWERCASE/UPPERCASE PROPERTY MATCHES
+        // SYNC TO FARMING APP YIELDING TAB WITH AGGRESSIVE CLEANUP & OVERWRITE
         try {
             const auctionRef = ref(db, 'tomato_auction_entries');
             const snapshot = await get(auctionRef);
-            let existingKey = null;
 
+            // Clean up any existing broken entries for today and this user to avoid conflicts
             if (snapshot.exists()) {
+                let promises = [];
                 snapshot.forEach(child => {
                     let entry = child.val();
-                    let entryGrade = (entry.grade || entry.quality || '').toUpperCase();
-                    if (entry.date === todayDate && entry.userId === username && entryGrade === gradeUpper) {
-                        existingKey = child.key;
+                    if (entry.date === todayDate && (entry.userId === username || entry.farmerName === farmerName)) {
+                        promises.push(fbRemove(ref(db, `tomato_auction_entries/${child.key}`)));
                     }
                 });
+                await Promise.all(promises);
             }
 
-            // Provide both uppercase/lowercase grade and all units/less key formats
+            // Push a fresh, perfectly structured record that satisfies every key your farming app checks
             const yieldData = {
                 userId: username,
                 farmerName: farmerName,
@@ -856,11 +859,7 @@
                 timestamp: Date.now()
             };
 
-            if (existingKey) {
-                await update(ref(db, `tomato_auction_entries/${existingKey}`), yieldData);
-            } else {
-                await push(auctionRef, yieldData);
-            }
+            await push(auctionRef, yieldData);
         } catch (e) {
             console.error("Yield sync error:", e);
         }
@@ -868,7 +867,7 @@
         // OPEN WHATSAPP
         let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
         msg += `👤 *Farmer:* ${farmerName} (${username})\n`;
-        msg += `📦 *Quality/Grade:* ${gradeUpper}\n`;
+        msg += `📦 *Quality/Grade:* ${gradeStr}\n`;
         msg += `📊 *Total Boxes:* ${boxes} | *Less:* ${less} | *Net Sold:* ${soldBoxes}\n`;
         msg += `💰 *Auction Rate:* ₹${price}/unit\n\n`;
         msg += `📈 *Gross Amount:* ₹${gross.toFixed(2)}\n`;
