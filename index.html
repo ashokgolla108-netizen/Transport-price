@@ -81,31 +81,12 @@
     <!-- ==================== TAB 1: OVERVIEW & ANALYTICS ==================== -->
     <div id="tab-overview" class="space-y-5 tab-content">
       
-      <!-- Earnings & View Filters Bar -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 space-y-3">
-        <div class="flex flex-wrap justify-between items-center gap-2">
-          <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">📅 Season Filter:</div>
-          <select id="overviewSeasonFilter" onchange="renderOverview()" class="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-900 bg-sky-50 border-sky-200">
-            <option value="ALL">🌐 Overall (All Seasons)</option>
-          </select>
-        </div>
-
-        <div class="border-t border-slate-100 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
-          <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-1">Filter Type</label>
-            <select id="earningsFilterType" onchange="toggleEarningsFilterControls()" class="w-full rounded-xl p-2 text-xs font-bold bg-slate-50">
-              <option value="ALL">All Time Earnings</option>
-              <option value="MONTHLY">Monthly (Specific Month)</option>
-              <option value="YEARLY">Yearly (Specific Year)</option>
-              <option value="YEAR_MONTH">Year + Month</option>
-              <option value="YEAR_MULTI_MONTHS">Year + Multiple Months</option>
-            </select>
-          </div>
-          <div id="filterDynamicContainer" class="hidden">
-            <label class="block text-[10px] font-bold text-slate-500 mb-1" id="filterControlLabel">Select Period</label>
-            <div id="filterInputsWrapper"></div>
-          </div>
-        </div>
+      <!-- Season Filter Bar -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex flex-wrap justify-between items-center gap-2">
+        <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">📅 View Filter:</div>
+        <select id="overviewSeasonFilter" onchange="renderOverview()" class="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-900 bg-sky-50 border-sky-200">
+          <option value="ALL">🌐 Overall (All Seasons)</option>
+        </select>
       </div>
 
       <!-- High-Level Summary Cards -->
@@ -124,7 +105,7 @@
         </div>
       </div>
 
-      <!-- DAY-WISE SUMMARY -->
+      <!-- DAY-WISE SUMMARY (Latest Expanded, Others Collapsible) -->
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
           <h2 class="text-base font-bold text-slate-800">📅 Day-wise Summary</h2>
@@ -199,10 +180,13 @@
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Season</label>
-              <div class="flex gap-1.5">
-                <select id="transSeason" class="w-full rounded-xl p-2.5 text-sm font-bold text-sky-900 bg-sky-50"></select>
-                <button type="button" onclick="addNewSeasonPrompt()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 rounded-xl text-xs font-bold shadow-sm transition" title="Add New Season">💾</button>
-              </div>
+              <select id="transSeason" onchange="toggleCustomSeason(this.value)" class="w-full rounded-xl p-2.5 text-sm">
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+                <option value="2028">2028</option>
+                <option value="CUSTOM">+ Custom Season</option>
+              </select>
+              <input type="text" id="customSeasonInput" placeholder="e.g. Special Season" class="hidden w-full mt-1.5 rounded-xl p-2 text-sm">
             </div>
           </div>
 
@@ -438,6 +422,7 @@
 
     let currentUser = localStorage.getItem('guruswamy_logged_user') || 'Guruswamy';
     const dbPrefix = 'guruswamy_';
+    let lastUsedSeason = "2026"; // Remembers the latest entered season
 
     function updateHeaderTitle() {
         let titleEl = document.getElementById('headerTitle');
@@ -477,23 +462,16 @@
     let dispatcherHistoryList = [];
     let farmerDirectory = {};
     let allDaysExpanded = false;
-    let availableSeasons = ["2026"];
-    let lastUsedSeason = "2026";
 
     function initGuruswamyApp() {
         loadTransportData();
         loadFarmerDirectory();
         loadDispatcherHistory();
-        toggleEarningsFilterControls();
     }
 
-    // EXPOSED GLOBALLY FOR TAB SWITCHING
     window.switchTab = function(tabName) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
-        let targetTab = document.getElementById('tab-' + tabName);
-        if (targetTab) {
-            targetTab.classList.remove('hidden');
-        }
+        document.getElementById('tab-' + tabName).classList.remove('hidden');
         
         const titles = {
             overview: "Overview & Farmer Earnings",
@@ -511,40 +489,9 @@
         });
     };
 
-    window.addNewSeasonPrompt = function() {
-        let newS = prompt("Enter new season name (e.g. 2027 or Summer 2027):");
-        if (newS && newS.trim() !== '') {
-            let formatted = newS.trim();
-            if (!availableSeasons.includes(formatted)) {
-                availableSeasons.push(formatted);
-            }
-            lastUsedSeason = formatted;
-            populateSeasonDropdowns();
-            showToast(`Season "${formatted}" added successfully`);
-        }
+    window.toggleCustomSeason = function(val) {
+        document.getElementById('customSeasonInput').classList.toggle('hidden', val !== 'CUSTOM');
     };
-
-    function populateSeasonDropdowns() {
-        const transSeasonSelect = document.getElementById('transSeason');
-        let tCurrent = transSeasonSelect.value || lastUsedSeason;
-        transSeasonSelect.innerHTML = availableSeasons.map(s => `<option value="${s}">${s}</option>`).join('');
-        if (availableSeasons.includes(tCurrent)) {
-            transSeasonSelect.value = tCurrent;
-        } else {
-            transSeasonSelect.value = lastUsedSeason;
-        }
-
-        const overviewSelect = document.getElementById('overviewSeasonFilter');
-        let oCurrent = overviewSelect.value;
-        let html = `<option value="ALL">🌐 Overall (All Seasons)</option>`;
-        availableSeasons.forEach(s => {
-            html += `<option value="${s}">🌦️ ${s}</option>`;
-        });
-        overviewSelect.innerHTML = html;
-        if (overviewSelect.querySelector(`option[value="${oCurrent}"]`)) {
-            overviewSelect.value = oCurrent;
-        }
-    }
 
     window.calculateTransport = function() {
         let boxes = parseFloat(document.getElementById('transBoxes').value) || 0;
@@ -554,7 +501,8 @@
 
     window.saveTransportRecord = async function() {
         let date = document.getElementById('transDate').value;
-        let season = document.getElementById('transSeason').value;
+        let rawSeason = document.getElementById('transSeason').value;
+        let season = rawSeason === 'CUSTOM' ? document.getElementById('customSeasonInput').value.trim() : rawSeason;
         let farmerName = document.getElementById('transFarmerSelect').value;
         let boxes = parseFloat(document.getElementById('transBoxes').value) || 0;
         let rate = parseFloat(document.getElementById('transRate').value) || 25;
@@ -564,6 +512,7 @@
             return showToast('Please fill Date, Season, select a Farmer, and Boxes');
         }
 
+        // Save last used season so subsequent entries default to it
         lastUsedSeason = season;
 
         try {
@@ -572,13 +521,29 @@
             });
             showToast('Transport record saved successfully');
             
+            // RESET FORM COMPLETELY (keeping rate at 25, clearing boxes & notes)
             document.getElementById('transBoxes').value = '';
             document.getElementById('transRate').value = '25';
             document.getElementById('transNotes').value = '';
             document.getElementById('transTotalDisplay').innerText = '0.00';
-            document.getElementById('transSeason').value = lastUsedSeason;
+            
+            // Ensure season dropdown defaults back to last saved season
+            setSeasonDropdownDefault(lastUsedSeason);
         } catch (error) { showToast("Error: " + error.message); }
     };
+
+    function setSeasonDropdownDefault(seasonName) {
+        const select = document.getElementById('transSeason');
+        let optionExists = Array.from(select.options).some(o => o.value === seasonName);
+        if (!optionExists && seasonName) {
+            let opt = document.createElement('option');
+            opt.value = seasonName;
+            opt.text = seasonName;
+            select.insertBefore(opt, select.lastElementChild);
+        }
+        select.value = seasonName;
+        document.getElementById('customSeasonInput').classList.add('hidden');
+    }
 
     function loadTransportData() {
         onValue(ref(db, `${dbPrefix}transport_records`), (snapshot) => {
@@ -590,15 +555,18 @@
                 if (!item.rate) item.rate = 25;
                 if (!item.totalFare) item.totalFare = item.boxes * item.rate;
                 cloudTransportRecords.push(item);
-                if (!availableSeasons.includes(item.season)) {
-                    availableSeasons.push(item.season);
-                }
             });
+
+            // Find latest entry by timestamp to set default season
             if (cloudTransportRecords.length > 0) {
-                let sortedByTime = [...cloudTransportRecords].sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
-                lastUsedSeason = sortedByTime[0].season || "2026";
+                let sorted = [...cloudTransportRecords].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                if (sorted[0].season) {
+                    lastUsedSeason = sorted[0].season;
+                }
             }
-            populateSeasonDropdowns();
+
+            populateSeasonFilter();
+            setSeasonDropdownDefault(lastUsedSeason);
             renderTransportRecords();
             renderOverview();
         });
@@ -616,56 +584,19 @@
         });
     }
 
-    window.toggleEarningsFilterControls = function() {
-        let type = document.getElementById('earningsFilterType').value;
-        let container = document.getElementById('filterDynamicContainer');
-        let label = document.getElementById('filterControlLabel');
-        let wrapper = document.getElementById('filterInputsWrapper');
+    function populateSeasonFilter() {
+        const select = document.getElementById('overviewSeasonFilter');
+        const currentVal = select.value;
+        const seasons = new Set(["2026", "2027", "2028"]);
+        cloudTransportRecords.forEach(r => { if (r.season) seasons.add(r.season); });
 
-        if (type === 'ALL') {
-            container.classList.add('hidden');
-            wrapper.innerHTML = '';
-        } else if (type === 'MONTHLY') {
-            container.classList.remove('hidden');
-            label.innerText = 'Select Month';
-            let currMonth = new Date().toISOString().slice(0, 7);
-            wrapper.innerHTML = `<input type="month" id="filterMonthInput" value="${currMonth}" onchange="renderOverview()" class="w-full rounded-xl p-2 text-xs font-bold bg-white">`;
-        } else if (type === 'YEARLY') {
-            container.classList.remove('hidden');
-            label.innerText = 'Select Year';
-            let currYear = new Date().getFullYear();
-            wrapper.innerHTML = `<input type="number" id="filterYearInput" value="${currYear}" oninput="renderOverview()" class="w-full rounded-xl p-2 text-xs font-bold bg-white">`;
-        } else if (type === 'YEAR_MONTH') {
-            container.classList.remove('hidden');
-            label.innerText = 'Select Year & Month';
-            let currMonth = new Date().toISOString().slice(0, 7);
-            wrapper.innerHTML = `<input type="month" id="filterYearMonthInput" value="${currMonth}" onchange="renderOverview()" class="w-full rounded-xl p-2 text-xs font-bold bg-white">`;
-        } else if (type === 'YEAR_MULTI_MONTHS') {
-            container.classList.remove('hidden');
-            label.innerText = 'Select Year & Multiple Months';
-            let currYear = new Date().getFullYear();
-            wrapper.innerHTML = `
-                <div class="flex gap-2 items-center">
-                    <input type="number" id="filterMultiYearInput" value="${currYear}" oninput="renderOverview()" class="w-24 rounded-xl p-2 text-xs font-bold bg-white" placeholder="Year">
-                    <select id="filterMultiMonthSelect" multiple onchange="renderOverview()" class="w-full rounded-xl p-1.5 text-xs font-bold bg-white h-20">
-                        <option value="01">January</option>
-                        <option value="02">February</option>
-                        <option value="03">March</option>
-                        <option value="04">April</option>
-                        <option value="05">May</option>
-                        <option value="06">June</option>
-                        <option value="07">July</option>
-                        <option value="08">August</option>
-                        <option value="09">September</option>
-                        <option value="10">October</option>
-                        <option value="11">November</option>
-                        <option value="12">December</option>
-                    </select>
-                </div>
-            `;
-        }
-        renderOverview();
-    };
+        let html = `<option value="ALL">🌐 Overall (All Seasons)</option>`;
+        Array.from(seasons).sort().forEach(s => {
+            html += `<option value="${s}">🌦️ ${s}</option>`;
+        });
+        select.innerHTML = html;
+        if (Array.from(seasons).includes(currentVal)) select.value = currentVal;
+    }
 
     window.toggleAllDays = function() {
         allDaysExpanded = !allDaysExpanded;
@@ -675,36 +606,9 @@
 
     window.renderOverview = function() {
         const selectedSeason = document.getElementById('overviewSeasonFilter').value;
-        const filterType = document.getElementById('earningsFilterType').value;
-
-        let filteredRecords = selectedSeason === 'ALL' 
-            ? [...cloudTransportRecords] 
+        const filteredRecords = selectedSeason === 'ALL' 
+            ? cloudTransportRecords 
             : cloudTransportRecords.filter(r => r.season === selectedSeason);
-
-        if (filterType === 'MONTHLY' || filterType === 'YEAR_MONTH') {
-            let mInput = document.getElementById(filterType === 'MONTHLY' ? 'filterMonthInput' : 'filterYearMonthInput');
-            if (mInput && mInput.value) {
-                filteredRecords = filteredRecords.filter(r => r.date && r.date.startsWith(mInput.value));
-            }
-        } else if (filterType === 'YEARLY') {
-            let yInput = document.getElementById('filterYearInput');
-            if (yInput && yInput.value) {
-                filteredRecords = filteredRecords.filter(r => r.date && r.date.startsWith(yInput.value));
-            }
-        } else if (filterType === 'YEAR_MULTI_MONTHS') {
-            let yInput = document.getElementById('filterMultiYearInput');
-            let mSelect = document.getElementById('filterMultiMonthSelect');
-            if (yInput && yInput.value && mSelect) {
-                let selectedMonths = Array.from(mSelect.selectedOptions).map(o => o.value);
-                if (selectedMonths.length > 0) {
-                    filteredRecords = filteredRecords.filter(r => {
-                        if (!r.date || !r.date.startsWith(yInput.value)) return false;
-                        let monthPart = r.date.split('-')[1];
-                        return selectedMonths.includes(monthPart);
-                    });
-                }
-            }
-        }
 
         document.getElementById('farmerBreakdownSubtitle').innerText = selectedSeason === 'ALL'
             ? "Showing overall earnings across all seasons"
