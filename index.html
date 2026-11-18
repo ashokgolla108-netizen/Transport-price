@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Guruswamy Transportation & Price Dispatcher</title>
+    <title id="pageTitle">Transportation & Price Dispatcher</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -35,14 +35,14 @@
     <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center space-y-4 border border-slate-100">
       <div class="w-16 h-16 bg-sky-50 text-sky-700 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-inner">🚛</div>
       <div>
-        <h2 class="text-xl font-extrabold text-slate-800">Guruswamy Transport System</h2>
-        <p class="text-xs text-slate-500 mt-1">Please sign in to continue</p>
+        <h2 class="text-xl font-extrabold text-slate-800">Transport System Login</h2>
+        <p class="text-xs text-slate-500 mt-1">Please enter your user ID to continue</p>
       </div>
 
       <div class="space-y-3 pt-2 text-left">
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1">User ID</label>
-          <input type="text" id="loginUser" placeholder="Enter user id (guruswamy)" class="w-full rounded-xl p-3 text-sm">
+          <input type="text" id="loginUser" placeholder="e.g. Guruswamy or Ashok" class="w-full rounded-xl p-3 text-sm">
         </div>
         <div>
           <label class="block text-xs font-bold text-slate-600 mb-1">Password</label>
@@ -63,7 +63,7 @@
       <div class="flex items-center gap-2">
         <span class="text-lg">🚛</span>
         <div>
-          <h1 class="text-xs font-bold tracking-wide" id="headerTitle">Guruswamy Transportation</h1>
+          <h1 class="text-xs font-bold tracking-wide" id="headerTitle">Transport System</h1>
           <p class="text-sky-200 text-[9px]" id="headerSub">Overview & Farmer Earnings</p>
         </div>
       </div>
@@ -105,7 +105,7 @@
         </div>
       </div>
 
-      <!-- DAY-WISE SUMMARY (Latest Expanded, Others Collapsible) -->
+      <!-- DAY-WISE SUMMARY (Latest Expanded, Others Collapsible Dropdown) -->
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
           <h2 class="text-base font-bold text-slate-800">📅 Day-wise Summary</h2>
@@ -295,7 +295,8 @@
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Less Boxes</label>
-              <input type="number" id="dispatchLess" value="5" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
+              <!-- Less default set to blank as requested -->
+              <input type="number" id="dispatchLess" placeholder="e.g. 5" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
             </div>
           </div>
 
@@ -425,7 +426,9 @@
 
     function updateHeaderTitle() {
         let titleEl = document.getElementById('headerTitle');
-        if (titleEl) titleEl.innerText = currentUser;
+        let pageTitleEl = document.getElementById('pageTitle');
+        if (titleEl) titleEl.innerText = `${currentUser} Transportation`;
+        if (pageTitleEl) pageTitleEl.innerText = `${currentUser} - Transport & Dispatcher`;
     }
     updateHeaderTitle();
 
@@ -466,9 +469,16 @@
         loadTransportData();
         loadFarmerDirectory();
         loadDispatcherHistory();
+        
+        // Restore last active tab on load/refresh
+        let savedTab = localStorage.getItem('guruswamy_active_tab') || 'overview';
+        switchTab(savedTab, false);
     }
 
-    window.switchTab = function(tabName) {
+    window.switchTab = function(tabName, save = true) {
+        if (save) {
+            localStorage.setItem('guruswamy_active_tab', tabName);
+        }
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.getElementById('tab-' + tabName).classList.remove('hidden');
         
@@ -517,7 +527,7 @@
             });
             showToast('Transport record saved successfully');
             
-            // RESET FORM COMPLETELY (Resetting Rate back to 25, clearing boxes & notes)
+            // RESET FORM COMPLETELY
             document.getElementById('transBoxes').value = '';
             document.getElementById('transRate').value = '25';
             document.getElementById('transNotes').value = '';
@@ -711,7 +721,7 @@
         });
 
         let title = selectedSeason === 'ALL' ? 'Overall Transport Report' : `Season Report (${selectedSeason})`;
-        let msg = `🚛 *Guruswamy Transport - ${title}*\n`;
+        let msg = `🚛 *${currentUser} Transport - ${title}*\n`;
         msg += `📦 *Total Boxes:* ${totalBoxes}\n`;
         msg += `💰 *Total Revenue:* ₹${totalEarned.toLocaleString('en-IN')}\n\n`;
         msg += `👨‍🌾 *Farmer-wise Breakdown:*\n`;
@@ -896,6 +906,7 @@
 
             // RESET DISPATCHER FORM
             document.getElementById('dispatchBoxes').value = '';
+            document.getElementById('dispatchLess').value = '';
             document.getElementById('dispatchPrice').value = '';
             document.getElementById('prevSoldBoxes').innerText = '0';
             document.getElementById('prevGross').innerText = '0.00';
@@ -968,7 +979,7 @@
         document.getElementById('dispatchFarmerSelect').value = r.farmerName || '';
         document.getElementById('dispatchGrade').value = r.grade || 'High';
         document.getElementById('dispatchBoxes').value = r.boxes || '';
-        document.getElementById('dispatchLess').value = r.less !== undefined ? r.less : 5;
+        document.getElementById('dispatchLess').value = r.less !== undefined ? r.less : '';
         document.getElementById('dispatchPrice').value = r.price || '';
         updateDispatchPreview();
         remove(ref(db, `${dbPrefix}dispatcher_history/${id}`));
