@@ -279,9 +279,9 @@
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Quality / Grade</label>
               <select id="dispatchGrade" onchange="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
-                <option value="HIGH">HIGH</option>
-                <option value="MEDIUM">MEDIUM</option>
-                <option value="LOW">LOW</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
               </select>
             </div>
           </div>
@@ -802,7 +802,8 @@
             return showToast('Error: Selected farmer does not have a valid system username assigned.');
         }
 
-        let grade = (document.getElementById('dispatchGrade').value || 'MEDIUM').toUpperCase();
+        let gradeUpper = (document.getElementById('dispatchGrade').value || 'MEDIUM').toUpperCase();
+        let gradeLower = gradeUpper.toLowerCase(); // e.g. "high", "medium", "low"
         let boxes = parseFloat(document.getElementById('dispatchBoxes').value) || 0;
         let less = parseFloat(document.getElementById('dispatchLess').value) || 0;
         let price = parseFloat(document.getElementById('dispatchPrice').value) || 0;
@@ -819,7 +820,7 @@
 
         let todayDate = new Date().toISOString().split('T')[0];
 
-        // SYNC TO FARMING APP YIELDING TAB WITH EXACT MATCHING PROPERTY KEYS
+        // SYNC TO FARMING APP YIELDING TAB WITH ALL LOWERCASE/UPPERCASE PROPERTY MATCHES
         try {
             const auctionRef = ref(db, 'tomato_auction_entries');
             const snapshot = await get(auctionRef);
@@ -828,19 +829,20 @@
             if (snapshot.exists()) {
                 snapshot.forEach(child => {
                     let entry = child.val();
-                    if (entry.date === todayDate && entry.userId === username && ((entry.grade || entry.quality || '').toUpperCase() === grade)) {
+                    let entryGrade = (entry.grade || entry.quality || '').toUpperCase();
+                    if (entry.date === todayDate && entry.userId === username && entryGrade === gradeUpper) {
                         existingKey = child.key;
                     }
                 });
             }
 
-            // Comprehensive property mapping so the farming app reads grade, units, less, rate properly without "undefined"
+            // Provide both uppercase/lowercase grade and all units/less key formats
             const yieldData = {
                 userId: username,
                 farmerName: farmerName,
                 date: todayDate,
-                grade: grade,
-                quality: grade,
+                grade: gradeUpper,
+                quality: gradeLower,
                 units: boxes,
                 totalBoxes: boxes,
                 lessBoxes: less,
@@ -866,7 +868,7 @@
         // OPEN WHATSAPP
         let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
         msg += `👤 *Farmer:* ${farmerName} (${username})\n`;
-        msg += `📦 *Quality/Grade:* ${grade}\n`;
+        msg += `📦 *Quality/Grade:* ${gradeUpper}\n`;
         msg += `📊 *Total Boxes:* ${boxes} | *Less:* ${less} | *Net Sold:* ${soldBoxes}\n`;
         msg += `💰 *Auction Rate:* ₹${price}/unit\n\n`;
         msg += `📈 *Gross Amount:* ₹${gross.toFixed(2)}\n`;
