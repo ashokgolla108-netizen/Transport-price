@@ -23,7 +23,7 @@
         }
     </style>
 </head>
-<body class="min-h-screen pb-20">
+<body class="min-h-screen pb-24">
 
   <!-- IN-PAGE TOAST NOTIFICATION -->
   <div id="toastBanner" class="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 bg-sky-800 text-white px-5 py-2.5 rounded-2xl shadow-xl text-xs font-bold transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-2">
@@ -65,7 +65,7 @@
         <span class="text-lg">🚛</span>
         <div>
           <h1 class="text-xs font-bold tracking-wide">Guruswamy Transportation</h1>
-          <p class="text-sky-200 text-[9px]">Tempo Transport & Farmer Dispatcher</p>
+          <p class="text-sky-200 text-[9px]" id="headerSub">Overview & Farmer Earnings</p>
         </div>
       </div>
       <div>
@@ -79,8 +79,106 @@
   <!-- MAIN CONTENT CONTAINER -->
   <main class="max-w-4xl mx-auto px-4 mt-5 space-y-5">
 
-    <!-- TAB 1: TRANSPORTATION RECORDS -->
-    <div id="tab-transport" class="space-y-5 tab-content">
+    <!-- ==================== TAB 1: OVERVIEW & ANALYTICS ==================== -->
+    <div id="tab-overview" class="space-y-5 tab-content">
+      
+      <!-- Season Filter Bar -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex flex-wrap justify-between items-center gap-2">
+        <div class="text-xs font-extrabold text-slate-700 uppercase tracking-wider">📅 View Filter:</div>
+        <select id="overviewSeasonFilter" onchange="renderOverview()" class="rounded-xl px-3 py-1.5 text-xs font-bold text-sky-900 bg-sky-50 border-sky-200">
+          <option value="ALL">🌐 Overall (All Seasons)</option>
+        </select>
+      </div>
+
+      <!-- High-Level Summary Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div class="bg-gradient-to-br from-sky-700 to-blue-800 p-4 rounded-2xl text-white col-span-2 sm:col-span-1 shadow-sm">
+          <div class="text-[10px] uppercase tracking-wider font-bold opacity-85 mb-1">💰 Total Transport Earned</div>
+          <div class="text-2xl font-black" id="ovTotalEarned">₹0.00</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">📦 Total Boxes Moved</div>
+          <div class="text-xl font-black text-slate-800" id="ovTotalBoxes">0</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">👥 Farmers Served</div>
+          <div class="text-xl font-black text-sky-700" id="ovTotalFarmers">0</div>
+        </div>
+      </div>
+
+      <!-- FARMER-WISE EARNINGS BREAKDOWN (SEASON-WISE & OVERALL) -->
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+          <div>
+            <h2 class="text-base font-bold text-slate-800">👨‍🌾 Earnings Per Farmer</h2>
+            <p class="text-[11px] text-slate-400" id="farmerBreakdownSubtitle">Showing overall earnings across all seasons</p>
+          </div>
+          <button onclick="shareFarmerSummaryWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
+            <span>💬</span> Share
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-sky-50 text-sky-900">
+                <th class="p-2.5 text-left">Farmer Name</th>
+                <th class="p-2.5 text-center">Trips</th>
+                <th class="p-2.5 text-center">Total Boxes</th>
+                <th class="p-2.5 text-right">Amount Earned (@₹25)</th>
+              </tr>
+            </thead>
+            <tbody id="farmerSummaryTableBody">
+              <tr><td colspan="4" class="text-center text-slate-400 py-4">No records yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- SEASON-WISE SUMMARY -->
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">🌦️ Season-wise Summary</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-slate-700">
+                <th class="p-2.5 text-left">Season</th>
+                <th class="p-2.5 text-center">Farmers</th>
+                <th class="p-2.5 text-center">Total Boxes</th>
+                <th class="p-2.5 text-right">Total Revenue</th>
+              </tr>
+            </thead>
+            <tbody id="seasonSummaryTableBody">
+              <tr><td colspan="4" class="text-center text-slate-400 py-4">No season data yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- DAY-WISE SUMMARY -->
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">📅 Day-wise Summary</h2>
+        <div class="overflow-x-auto max-h-72">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-slate-700 sticky top-0">
+                <th class="p-2.5 text-left">Date</th>
+                <th class="p-2.5 text-center">Trips</th>
+                <th class="p-2.5 text-center">Boxes</th>
+                <th class="p-2.5 text-right">Daily Earnings</th>
+              </tr>
+            </thead>
+            <tbody id="daySummaryTableBody">
+              <tr><td colspan="4" class="text-center text-slate-400 py-4">No daily records yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- ==================== TAB 2: TRANSPORTATION RECORDS ==================== -->
+    <div id="tab-transport" class="space-y-5 tab-content hidden">
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <h2 class="text-base font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">📦 Add Farmer Transport Record</h2>
 
@@ -91,25 +189,38 @@
               <input type="date" id="transDate" class="w-full rounded-xl p-2.5 text-sm">
             </div>
             <div>
-              <label class="block text-xs font-bold text-slate-600 mb-1">Farmer Name</label>
-              <input type="text" id="transFarmerName" placeholder="e.g. Ashok" class="w-full rounded-xl p-2.5 text-sm">
+              <label class="block text-xs font-bold text-slate-600 mb-1">Season</label>
+              <select id="transSeason" onchange="toggleCustomSeason(this.value)" class="w-full rounded-xl p-2.5 text-sm">
+                <option value="Kharif 2026">Kharif 2026</option>
+                <option value="Rabi 2026">Rabi 2026</option>
+                <option value="Summer 2026">Summer 2026</option>
+                <option value="CUSTOM">+ Custom Season</option>
+              </select>
+              <input type="text" id="customSeasonInput" placeholder="e.g. Winter 2026" class="hidden w-full mt-1.5 rounded-xl p-2 text-sm">
             </div>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Farmer Name</label>
+              <input type="text" id="transFarmerName" list="farmerSuggestions" placeholder="e.g. Ashok" class="w-full rounded-xl p-2.5 text-sm">
+              <datalist id="farmerSuggestions"></datalist>
+            </div>
+            <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Total Boxes / Units</label>
               <input type="number" id="transBoxes" placeholder="e.g. 100" oninput="calculateTransport()" class="w-full rounded-xl p-2.5 text-sm">
             </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Fixed Transport Rate (₹)</label>
               <input type="number" id="transRate" value="25" readonly class="w-full rounded-xl p-2.5 text-sm bg-slate-100 text-slate-600 font-bold cursor-not-allowed">
             </div>
-          </div>
-
-          <div>
-            <label class="block text-xs font-bold text-slate-600 mb-1">Notes / Destination</label>
-            <input type="text" id="transNotes" placeholder="e.g. Market trip details" class="w-full rounded-xl p-2.5 text-sm">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Notes / Destination</label>
+              <input type="text" id="transNotes" placeholder="e.g. Market trip" class="w-full rounded-xl p-2.5 text-sm">
+            </div>
           </div>
 
           <div class="bg-sky-50 p-3 rounded-xl border border-sky-200 text-xs flex justify-between items-center font-bold text-sky-900">
@@ -125,7 +236,7 @@
 
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
-          <h2 class="text-base font-bold text-slate-800">📋 Transport Logs & Farmer Summary</h2>
+          <h2 class="text-base font-bold text-slate-800">📋 All Transport Logs</h2>
           <input type="text" id="searchTrans" placeholder="Search farmer..." oninput="renderTransportRecords()" class="rounded-xl px-2.5 py-1 text-xs w-32">
         </div>
 
@@ -134,9 +245,9 @@
             <thead>
               <tr class="bg-sky-50 text-sky-900">
                 <th class="p-2 text-center">Date</th>
-                <th class="p-2 text-left">Farmer Name</th>
+                <th class="p-2 text-left">Farmer</th>
+                <th class="p-2 text-center">Season</th>
                 <th class="p-2 text-center">Boxes</th>
-                <th class="p-2 text-center">Rate</th>
                 <th class="p-2 text-center">Total Fare</th>
                 <th class="p-2 text-left">Notes</th>
                 <th class="p-2 text-center">Action</th>
@@ -151,7 +262,7 @@
       </section>
     </div>
 
-    <!-- TAB 2: WHATSAPP PRICE DISPATCHER -->
+    <!-- ==================== TAB 3: WHATSAPP PRICE DISPATCHER ==================== -->
     <div id="tab-whatsapp" class="space-y-5 tab-content hidden">
       <!-- Farmer Directory Section -->
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
@@ -226,20 +337,24 @@
   <!-- FIXED BOTTOM NAVIGATION BAR -->
   <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-lg z-40">
     <div class="max-w-3xl mx-auto flex justify-around items-center py-2">
-      <button onclick="switchTab('transport')" id="btn-bottom-transport" class="flex flex-col items-center gap-0.5 text-sky-700 font-bold transition">
+      <button onclick="switchTab('overview')" id="btn-bottom-overview" class="flex flex-col items-center gap-0.5 text-sky-700 font-bold transition">
+        <span class="text-lg">📊</span>
+        <span class="text-[10px]">Overview</span>
+      </button>
+      <button onclick="switchTab('transport')" id="btn-bottom-transport" class="flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition">
         <span class="text-lg">🚛</span>
-        <span class="text-[10px]">Transport Records</span>
+        <span class="text-[10px]">Transport</span>
       </button>
       <button onclick="switchTab('whatsapp')" id="btn-bottom-whatsapp" class="flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition">
         <span class="text-lg">💬</span>
-        <span class="text-[10px]">Price Dispatcher</span>
+        <span class="text-[10px]">Dispatcher</span>
       </button>
     </div>
   </footer>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, push, remove, onValue, set, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, push, remove, onValue, set } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDWBw7KI3VG7M9FA00_DISNwVOTdAw5Rwg",
@@ -309,7 +424,14 @@
         document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
         document.getElementById('tab-' + tabName).classList.remove('hidden');
         
-        ['transport', 'whatsapp'].forEach(t => {
+        const titles = {
+            overview: "Overview & Farmer Earnings",
+            transport: "Transport Trip Records",
+            whatsapp: "Daily Price Dispatcher"
+        };
+        document.getElementById('headerSub').innerText = titles[tabName] || "";
+
+        ['overview', 'transport', 'whatsapp'].forEach(t => {
             const btn = document.getElementById('btn-bottom-' + t);
             if (btn) {
                 btn.className = t === tabName ? "flex flex-col items-center gap-0.5 text-sky-700 font-bold transition" : "flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition";
@@ -317,23 +439,30 @@
         });
     };
 
+    window.toggleCustomSeason = function(val) {
+        document.getElementById('customSeasonInput').classList.toggle('hidden', val !== 'CUSTOM');
+    };
+
     window.calculateTransport = function() {
         let boxes = parseFloat(document.getElementById('transBoxes').value) || 0;
-        let rate = 25; // Fixed transport rate
-        document.getElementById('transTotalDisplay').innerText = (boxes * rate).toFixed(2);
+        document.getElementById('transTotalDisplay').innerText = (boxes * 25).toFixed(2);
     };
 
     window.saveTransportRecord = async function() {
         let date = document.getElementById('transDate').value;
+        let rawSeason = document.getElementById('transSeason').value;
+        let season = rawSeason === 'CUSTOM' ? document.getElementById('customSeasonInput').value.trim() : rawSeason;
         let farmerName = document.getElementById('transFarmerName').value.trim();
         let boxes = parseFloat(document.getElementById('transBoxes').value) || 0;
         let notes = document.getElementById('transNotes').value.trim() || '-';
 
-        if (!date || !farmerName || boxes <= 0) return showToast('Please enter valid date, farmer name, and boxes');
+        if (!date || !farmerName || boxes <= 0 || !season) {
+            return showToast('Please fill Date, Season, Farmer Name, and Boxes');
+        }
 
         try {
             await push(ref(db, `${dbPrefix}transport_records`), {
-                date, farmerName, boxes, rate: 25, totalFare: boxes * 25, notes, timestamp: Date.now()
+                date, season, farmerName, boxes, rate: 25, totalFare: boxes * 25, notes, timestamp: Date.now()
             });
             showToast('Transport record saved successfully');
             document.getElementById('transBoxes').value = '';
@@ -348,11 +477,158 @@
             snapshot.forEach(child => {
                 let item = child.val();
                 item.id = child.key;
+                if (!item.season) item.season = "General";
                 cloudTransportRecords.push(item);
             });
+            populateSeasonFilter();
             renderTransportRecords();
+            renderOverview();
         });
     }
+
+    function populateSeasonFilter() {
+        const select = document.getElementById('overviewSeasonFilter');
+        const currentVal = select.value;
+        const seasons = new Set();
+        cloudTransportRecords.forEach(r => { if (r.season) seasons.add(r.season); });
+
+        let html = `<option value="ALL">🌐 Overall (All Seasons)</option>`;
+        Array.from(seasons).sort().forEach(s => {
+            html += `<option value="${s}">🌦️ ${s}</option>`;
+        });
+        select.innerHTML = html;
+        if (Array.from(seasons).includes(currentVal)) select.value = currentVal;
+    }
+
+    window.renderOverview = function() {
+        const selectedSeason = document.getElementById('overviewSeasonFilter').value;
+        const filteredRecords = selectedSeason === 'ALL' 
+            ? cloudTransportRecords 
+            : cloudTransportRecords.filter(r => r.season === selectedSeason);
+
+        document.getElementById('farmerBreakdownSubtitle').innerText = selectedSeason === 'ALL'
+            ? "Showing overall earnings across all seasons"
+            : `Showing earnings for ${selectedSeason}`;
+
+        let totalEarned = 0;
+        let totalBoxes = 0;
+        const farmerMap = {};
+        const dayMap = {};
+
+        filteredRecords.forEach(r => {
+            totalEarned += r.totalFare || 0;
+            totalBoxes += r.boxes || 0;
+
+            // Group by Farmer
+            const fName = (r.farmerName || 'Unknown').trim();
+            if (!farmerMap[fName]) farmerMap[fName] = { trips: 0, boxes: 0, earned: 0 };
+            farmerMap[fName].trips += 1;
+            farmerMap[fName].boxes += r.boxes || 0;
+            farmerMap[fName].earned += r.totalFare || 0;
+
+            // Group by Day
+            const dStr = r.date || 'Unknown';
+            if (!dayMap[dStr]) dayMap[dStr] = { trips: 0, boxes: 0, earned: 0 };
+            dayMap[dStr].trips += 1;
+            dayMap[dStr].boxes += r.boxes || 0;
+            dayMap[dStr].earned += r.totalFare || 0;
+        });
+
+        // Update Top Cards
+        document.getElementById('ovTotalEarned').innerText = `₹${totalEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+        document.getElementById('ovTotalBoxes').innerText = totalBoxes.toLocaleString('en-IN');
+        document.getElementById('ovTotalFarmers').innerText = Object.keys(farmerMap).length;
+
+        // 1. Render Farmer-wise Earnings Table
+        const farmerTbody = document.getElementById('farmerSummaryTableBody');
+        const sortedFarmers = Object.entries(farmerMap).sort((a, b) => b[1].earned - a[1].earned);
+
+        if (sortedFarmers.length === 0) {
+            farmerTbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-4">No records for this selection.</td></tr>';
+        } else {
+            farmerTbody.innerHTML = sortedFarmers.map(([name, data]) => `
+                <tr class="border-b border-slate-50 hover:bg-sky-50/40">
+                    <td class="p-2.5 text-left font-bold text-slate-800">${name}</td>
+                    <td class="p-2.5 text-center text-slate-600">${data.trips}</td>
+                    <td class="p-2.5 text-center font-semibold text-slate-700">${data.boxes.toLocaleString('en-IN')}</td>
+                    <td class="p-2.5 text-right font-black text-sky-700">₹${data.earned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 2. Render Season-wise Summary Table (Always shows all seasons for comparison)
+        const seasonMap = {};
+        cloudTransportRecords.forEach(r => {
+            const s = r.season || 'General';
+            if (!seasonMap[s]) seasonMap[s] = { farmers: new Set(), boxes: 0, earned: 0 };
+            seasonMap[s].farmers.add((r.farmerName || '').trim().toLowerCase());
+            seasonMap[s].boxes += r.boxes || 0;
+            seasonMap[s].earned += r.totalFare || 0;
+        });
+
+        const seasonTbody = document.getElementById('seasonSummaryTableBody');
+        const sortedSeasons = Object.entries(seasonMap).sort((a, b) => b[1].earned - a[1].earned);
+        if (sortedSeasons.length === 0) {
+            seasonTbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-4">No season data yet.</td></tr>';
+        } else {
+            seasonTbody.innerHTML = sortedSeasons.map(([sName, data]) => `
+                <tr class="border-b border-slate-50">
+                    <td class="p-2.5 text-left font-bold text-slate-800">${sName}</td>
+                    <td class="p-2.5 text-center text-slate-600">${data.farmers.size}</td>
+                    <td class="p-2.5 text-center font-semibold text-slate-700">${data.boxes.toLocaleString('en-IN')}</td>
+                    <td class="p-2.5 text-right font-black text-emerald-700">₹${data.earned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                </tr>
+            `).join('');
+        }
+
+        // 3. Render Day-wise Summary Table
+        const dayTbody = document.getElementById('daySummaryTableBody');
+        const sortedDays = Object.entries(dayMap).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+        if (sortedDays.length === 0) {
+            dayTbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-4">No daily records yet.</td></tr>';
+        } else {
+            dayTbody.innerHTML = sortedDays.map(([dStr, data]) => `
+                <tr class="border-b border-slate-50">
+                    <td class="p-2.5 text-left font-bold text-slate-700">${dStr}</td>
+                    <td class="p-2.5 text-center text-slate-600">${data.trips}</td>
+                    <td class="p-2.5 text-center font-semibold text-slate-700">${data.boxes.toLocaleString('en-IN')}</td>
+                    <td class="p-2.5 text-right font-extrabold text-sky-800">₹${data.earned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                </tr>
+            `).join('');
+        }
+    };
+
+    window.shareFarmerSummaryWhatsApp = function() {
+        const selectedSeason = document.getElementById('overviewSeasonFilter').value;
+        const filteredRecords = selectedSeason === 'ALL' 
+            ? cloudTransportRecords 
+            : cloudTransportRecords.filter(r => r.season === selectedSeason);
+
+        if (filteredRecords.length === 0) return showToast("No data to share");
+
+        let totalEarned = 0, totalBoxes = 0;
+        const farmerMap = {};
+        filteredRecords.forEach(r => {
+            totalEarned += r.totalFare || 0;
+            totalBoxes += r.boxes || 0;
+            const fName = (r.farmerName || 'Unknown').trim();
+            if (!farmerMap[fName]) farmerMap[fName] = { boxes: 0, earned: 0 };
+            farmerMap[fName].boxes += r.boxes || 0;
+            farmerMap[fName].earned += r.totalFare || 0;
+        });
+
+        let title = selectedSeason === 'ALL' ? 'Overall Transport Report' : `Season Report (${selectedSeason})`;
+        let msg = `🚛 *Guruswamy Transport - ${title}*\n`;
+        msg += `📦 *Total Boxes:* ${totalBoxes}\n`;
+        msg += `💰 *Total Revenue:* ₹${totalEarned.toLocaleString('en-IN')}\n\n`;
+        msg += `👨‍🌾 *Farmer-wise Breakdown:*\n`;
+
+        Object.entries(farmerMap).sort((a, b) => b[1].earned - a[1].earned).forEach(([name, d]) => {
+            msg += `• *${name}:* ${d.boxes} boxes — ₹${d.earned.toLocaleString('en-IN')}\n`;
+        });
+
+        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
+    };
 
     window.renderTransportRecords = function() {
         let tbody = document.getElementById('transportTableBody');
@@ -376,11 +652,11 @@
             totalBoxesSum += r.boxes;
             totalFareSum += r.totalFare;
             tbody.innerHTML += `
-                <tr>
+                <tr class="border-b border-slate-50">
                     <td class="p-2 text-center">${r.date}</td>
                     <td class="p-2 text-left font-bold text-slate-800">${r.farmerName}</td>
+                    <td class="p-2 text-center"><span class="bg-sky-50 text-sky-800 px-2 py-0.5 rounded-full text-[10px] font-bold">${r.season || 'General'}</span></td>
                     <td class="p-2 text-center">${r.boxes}</td>
-                    <td class="p-2 text-center">₹25</td>
                     <td class="p-2 text-center font-extrabold text-sky-800">₹${r.totalFare.toFixed(2)}</td>
                     <td class="p-2 text-left text-slate-500">${r.notes}</td>
                     <td class="p-2 text-center"><button onclick="deleteTransport('${r.id}')" class="text-rose-600 font-bold hover:underline">Del</button></td>
@@ -392,8 +668,8 @@
             <tr>
                 <td class="p-2 text-center uppercase">TOTAL</td>
                 <td class="p-2 text-left">-</td>
-                <td class="p-2 text-center">${totalBoxesSum}</td>
                 <td class="p-2 text-center">-</td>
+                <td class="p-2 text-center">${totalBoxesSum}</td>
                 <td class="p-2 text-center">₹${totalFareSum.toFixed(2)}</td>
                 <td class="p-2 text-left" colspan="2">-</td>
             </tr>
@@ -434,8 +710,11 @@
     function renderFarmerDirectory() {
         let chips = document.getElementById('farmerDirectoryChips');
         let select = document.getElementById('dispatchFarmerSelect');
+        let datalist = document.getElementById('farmerSuggestions');
+        
         chips.innerHTML = '';
         select.innerHTML = '<option value="">-- Select Farmer --</option>';
+        datalist.innerHTML = '';
 
         let names = Object.keys(farmerDirectory);
         if (names.length === 0) {
@@ -446,6 +725,7 @@
         names.forEach(name => {
             let phone = farmerDirectory[name].phone;
             select.innerHTML += `<option value="${name}">${name} (${phone})</option>`;
+            datalist.innerHTML += `<option value="${name}">`;
             chips.innerHTML += `
                 <div class="bg-sky-50 border border-sky-200 px-3 py-1.5 rounded-xl text-xs flex items-center gap-2">
                     <span class="font-bold text-slate-800">${name}</span>
@@ -463,9 +743,9 @@
         let soldBoxes = Math.max(0, boxes - less);
 
         let gross = soldBoxes * price;
-        let transportDed = boxes * 25; // Transport at ₹25 per total boxes
-        let commDed = soldBoxes * (price * 0.10); // Standard 10% commission on sold units
-        let rentDed = boxes * 4; // Market rent at ₹4 per total boxes
+        let transportDed = boxes * 25;
+        let commDed = soldBoxes * (price * 0.10);
+        let rentDed = boxes * 4;
         let totalDeductions = transportDed + commDed + rentDed;
         let netPayable = gross - totalDeductions;
 
