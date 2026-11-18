@@ -48,7 +48,6 @@
           <label class="block text-xs font-bold text-slate-600 mb-1">Password</label>
           <input type="password" id="loginPass" placeholder="Enter password (1234)" class="w-full rounded-xl p-3 text-sm">
         </div>
-        <div id="loginError" class="text-xs text-rose-600 font-semibold text-center hidden">Invalid User ID or Password!</div>
       </div>
 
       <button onclick="handleLogin()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl text-sm shadow-lg transition">
@@ -319,32 +318,9 @@
             </div>
           </div>
 
-          <button onclick="sendWhatsAppMessageAndSyncYield()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5">
-            <span>💬</span> Send WhatsApp & Sync to Farming App
+          <button onclick="sendWhatsAppMessageOnly()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+            <span>💬</span> Send WhatsApp Message
           </button>
-        </div>
-      </section>
-
-      <!-- DISPATCHER LOG TABLE FOR EDITING / DELETING -->
-      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
-        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">📋 Synced Auction Entries Management</h2>
-        <div class="overflow-x-auto">
-          <table class="w-full text-xs">
-            <thead>
-              <tr class="bg-sky-50 text-sky-900">
-                <th class="p-2 text-center">Date</th>
-                <th class="p-2 text-left">Farmer</th>
-                <th class="p-2 text-center">Grade</th>
-                <th class="p-2 text-center">Units</th>
-                <th class="p-2 text-center">Less</th>
-                <th class="p-2 text-center">Rate</th>
-                <th class="p-2 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody id="dispatcherTableBody">
-              <tr><td colspan="7" class="text-center text-slate-400 py-4">No synced auction entries yet.</td></tr>
-            </tbody>
-          </table>
         </div>
       </section>
     </div>
@@ -353,22 +329,14 @@
     <div id="tab-farmers" class="space-y-5 tab-content hidden">
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <h2 class="text-base font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">👥 Manage Farmers Directory</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-          <input type="text" id="farmerNameInput" placeholder="Farmer Name (e.g. Ashok)" class="rounded-xl p-2.5 text-sm">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-1">Select System Username</label>
-            <select id="farmerUsernameInput" class="w-full rounded-xl p-2.5 text-sm font-bold text-sky-900 bg-sky-50">
-              <option value="">-- Select Valid Username --</option>
-              <option value="ashok">ashok</option>
-              <option value="ramakrishna">ramakrishna</option>
-              <option value="yumika">yumika</option>
-              <option value="harish">harish</option>
-              <option value="pawan">pawan</option>
-            </select>
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">Farmer Name</label>
+            <input type="text" id="farmerNameInput" placeholder="e.g. Ashok" class="w-full rounded-xl p-2.5 text-sm">
           </div>
           <div>
-            <label class="block text-[10px] font-bold text-slate-500 mb-1">WhatsApp Phone</label>
-            <input type="text" id="farmerPhoneInput" placeholder="919876543210" class="rounded-xl p-2.5 text-sm">
+            <label class="block text-[10px] font-bold text-slate-500 mb-1">WhatsApp Phone Number</label>
+            <input type="text" id="farmerPhoneInput" placeholder="919876543210" class="w-full rounded-xl p-2.5 text-sm">
           </div>
         </div>
         <button onclick="saveFarmerContact()" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm mb-4">
@@ -380,13 +348,12 @@
             <thead>
               <tr class="bg-slate-50 text-slate-700">
                 <th class="p-2.5 text-left">Farmer Name</th>
-                <th class="p-2.5 text-left">Username</th>
                 <th class="p-2.5 text-left">WhatsApp Number</th>
                 <th class="p-2.5 text-center">Action</th>
               </tr>
             </thead>
             <tbody id="farmersTableBody">
-              <tr><td colspan="4" class="text-center text-slate-400 py-4">No farmers added yet.</td></tr>
+              <tr><td colspan="3" class="text-center text-slate-400 py-4">No farmers added yet.</td></tr>
             </tbody>
           </table>
         </div>
@@ -419,7 +386,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
-    import { getDatabase, ref, push, remove, onValue, set, get, update, remove as fbRemove } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+    import { getDatabase, ref, push, remove, onValue, set, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDWBw7KI3VG7M9FA00_DISNwVOTdAw5Rwg",
@@ -468,12 +435,10 @@
 
     let cloudTransportRecords = [];
     let farmerDirectory = {};
-    let auctionRecordsList = [];
 
     function initGuruswamyApp() {
         loadTransportData();
         loadFarmerDirectory();
-        loadAuctionRecords();
     }
 
     window.switchTab = function(tabName) {
@@ -542,76 +507,6 @@
             renderOverview();
         });
     }
-
-    function loadAuctionRecords() {
-        onValue(ref(db, 'tomato_auction_entries'), (snapshot) => {
-            auctionRecordsList = [];
-            snapshot.forEach(child => {
-                let item = child.val();
-                item.id = child.key;
-                auctionRecordsList.push(item);
-            });
-            renderAuctionRecordsTable();
-        });
-    }
-
-    function renderAuctionRecordsTable() {
-        let tbody = document.getElementById('dispatcherTableBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-
-        if (auctionRecordsList.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-400 py-4">No synced auction entries yet.</td></tr>';
-            return;
-        }
-
-        auctionRecordsList.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
-
-        auctionRecordsList.forEach(r => {
-            let grade = r.grade || r.Grade || r.quality || r.Quality || 'MEDIUM';
-            let units = r.units !== undefined ? r.units : (r.totalBoxes !== undefined ? r.totalBoxes : (r.boxes !== undefined ? r.boxes : 0));
-            let less = r.less !== undefined ? r.less : (r.lessBoxes !== undefined ? r.lessBoxes : 0);
-            let rate = r.rate !== undefined ? r.rate : (r.auctionPrice !== undefined ? r.auctionPrice : 0);
-
-            tbody.innerHTML += `
-                <tr class="border-b border-slate-50 hover:bg-sky-50/40">
-                    <td class="p-2 text-center">${r.date || '-'}</td>
-                    <td class="p-2 text-left font-bold text-slate-800">${r.farmerName || r.userId || '-'}</td>
-                    <td class="p-2 text-center"><span class="bg-sky-100 text-sky-900 px-2 py-0.5 rounded-full font-bold text-[10px]">${grade}</span></td>
-                    <td class="p-2 text-center font-semibold">${units}</td>
-                    <td class="p-2 text-center text-rose-600">${less}</td>
-                    <td class="p-2 text-center font-extrabold text-sky-800">₹${rate}</td>
-                    <td class="p-2 text-center space-x-1">
-                        <button onclick="editAuctionRecord('${r.id}')" class="text-sky-600 font-bold hover:underline">Edit</button>
-                        <button onclick="deleteAuctionRecord('${r.id}')" class="text-rose-600 font-bold hover:underline">Del</button>
-                    </td>
-                </tr>
-            `;
-        });
-    }
-
-    window.deleteAuctionRecord = async function(id) {
-        if (confirm("Delete this synced auction entry?")) {
-            await fbRemove(ref(db, `tomato_auction_entries/${id}`));
-            showToast("Auction record deleted");
-        }
-    };
-
-    window.editAuctionRecord = function(id) {
-        let r = auctionRecordsList.find(x => x.id === id);
-        if (!r) return;
-        document.getElementById('dispatchDate').value = r.date || new Date().toISOString().split('T')[0];
-        document.getElementById('dispatchFarmerSelect').value = r.farmerName || '';
-        document.getElementById('dispatchGrade').value = r.grade || r.Grade || 'High';
-        document.getElementById('dispatchBoxes').value = r.units || r.totalBoxes || r.boxes || '';
-        document.getElementById('dispatchLess').value = r.less !== undefined ? r.less : (r.lessBoxes || 5);
-        document.getElementById('dispatchPrice').value = r.rate || r.auctionPrice || '';
-        updateDispatchPreview();
-        // Delete old entry so submitting will replace it cleanly
-        fbRemove(ref(db, `tomato_auction_entries/${id}`));
-        showToast("Loaded entry into form for editing. Click Send & Sync to save changes.");
-        switchTab('whatsapp');
-    };
 
     function populateSeasonFilter() {
         const select = document.getElementById('overviewSeasonFilter');
@@ -820,18 +715,16 @@
 
     window.saveFarmerContact = async function() {
         let name = document.getElementById('farmerNameInput').value.trim();
-        let username = document.getElementById('farmerUsernameInput').value.trim();
         let phone = document.getElementById('farmerPhoneInput').value.trim().replace(/[^0-9]/g, '');
         
-        if (!name || !username || !phone) {
-            return showToast('Please enter Name, select a valid Username, and provide Phone Number');
+        if (!name || !phone) {
+            return showToast('Please enter both Farmer Name and Phone Number');
         }
 
         try {
-            await set(ref(db, `${dbPrefix}farmer_directory/${name}`), { username, phone });
-            showToast('Farmer contact saved securely');
+            await set(ref(db, `${dbPrefix}farmer_directory/${name}`), { phone });
+            showToast('Farmer contact saved successfully');
             document.getElementById('farmerNameInput').value = '';
-            document.getElementById('farmerUsernameInput').value = '';
             document.getElementById('farmerPhoneInput').value = '';
         } catch (error) { showToast("Error: " + error.message); }
     };
@@ -851,22 +744,20 @@
 
         let names = Object.keys(farmerDirectory);
         if (names.length === 0) {
-            farmersTbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-4">No farmers added yet. Use the form above.</td></tr>';
+            farmersTbody.innerHTML = '<tr><td colspan="3" class="text-center text-slate-400 py-4">No farmers added yet. Use the form above.</td></tr>';
             return;
         }
 
         names.forEach(name => {
             let farmer = farmerDirectory[name];
             let phone = typeof farmer === 'object' ? farmer.phone : farmer;
-            let username = typeof farmer === 'object' && farmer.username ? farmer.username : name.toLowerCase();
 
             selectTrans.innerHTML += `<option value="${name}">${name}</option>`;
-            selectDispatch.innerHTML += `<option value="${name}">${name} (${username} - ${phone})</option>`;
+            selectDispatch.innerHTML += `<option value="${name}">${name} (${phone})</option>`;
             
             farmersTbody.innerHTML += `
                 <tr class="border-b border-slate-50">
                     <td class="p-2.5 text-left font-bold text-slate-800">${name}</td>
-                    <td class="p-2.5 text-left text-slate-600 font-semibold">${username}</td>
                     <td class="p-2.5 text-left text-slate-600">${phone}</td>
                     <td class="p-2.5 text-center"><button onclick="deleteFarmerContact('${name}')" class="text-rose-600 font-bold hover:underline">Delete</button></td>
                 </tr>
@@ -893,7 +784,7 @@
         document.getElementById('prevNetPayable').innerText = netPayable.toFixed(2);
     };
 
-    window.sendWhatsAppMessageAndSyncYield = async function() {
+    window.sendWhatsAppMessageOnly = function() {
         let dispatchDate = document.getElementById('dispatchDate').value;
         let farmerName = document.getElementById('dispatchFarmerSelect').value;
         if (!dispatchDate || !farmerName || !farmerDirectory[farmerName]) {
@@ -902,16 +793,8 @@
         
         let farmerObj = farmerDirectory[farmerName];
         let phone = typeof farmerObj === 'object' ? farmerObj.phone : farmerObj;
-        let username = typeof farmerObj === 'object' && farmerObj.username ? farmerObj.username : '';
-
-        if (!username) {
-            return showToast('Error: Selected farmer does not have a valid system username assigned.');
-        }
 
         let gradeStr = document.getElementById('dispatchGrade').value || 'High';
-        let gradeUpper = gradeStr.toUpperCase(); // "HIGH"
-        let gradeLower = gradeStr.toLowerCase(); // "high"
-        
         let boxes = parseFloat(document.getElementById('dispatchBoxes').value) || 0;
         let less = parseFloat(document.getElementById('dispatchLess').value) || 0;
         let price = parseFloat(document.getElementById('dispatchPrice').value) || 0;
@@ -926,49 +809,9 @@
         let totalDeductions = transportDed + commDed + rentDed;
         let netPayable = gross - totalDeductions;
 
-        // SYNC TO FARMING APP YIELDING TAB WITH SATURATED KEY MAPPING
-        try {
-            const auctionRef = ref(db, 'tomato_auction_entries');
-            
-            const yieldData = {
-                userId: username,
-                farmerName: farmerName,
-                date: dispatchDate,
-                grade: gradeUpper,
-                Grade: gradeUpper,
-                quality: gradeLower,
-                Quality: gradeStr,
-                units: boxes,
-                Units: boxes,
-                totalBoxes: boxes,
-                TotalBoxes: boxes,
-                boxes: boxes,
-                Boxes: boxes,
-                less: less,
-                Less: less,
-                lessBoxes: less,
-                LessBoxes: less,
-                netBoxes: soldBoxes,
-                rate: price,
-                Rate: price,
-                auctionPrice: price,
-                AuctionPrice: price,
-                grossAmount: gross,
-                deductions: totalDeductions,
-                netPayable: netPayable,
-                timestamp: Date.now()
-            };
-
-            await push(auctionRef, yieldData);
-            showToast('Successfully synced to Farming App & added to dispatch logs!');
-        } catch (e) {
-            console.error("Yield sync error:", e);
-            showToast("Sync error: " + e.message);
-        }
-
-        // OPEN WHATSAPP
+        // OPEN WHATSAPP ONLY (NO SYNC)
         let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
-        msg += `👤 *Farmer:* ${farmerName} (${username})\n`;
+        msg += `👤 *Farmer:* ${farmerName}\n`;
         msg += `📅 *Date:* ${dispatchDate}\n`;
         msg += `📦 *Quality/Grade:* ${gradeStr}\n`;
         msg += `📊 *Total Boxes:* ${boxes} | *Less:* ${less} | *Net Sold:* ${soldBoxes}\n`;
@@ -981,6 +824,7 @@
         msg += `Regards,\n*Guruswamy Transport*`;
 
         window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
+        showToast('WhatsApp message opened successfully');
     };
 </script>
 
