@@ -295,7 +295,7 @@
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Less Boxes</label>
-              <!-- Less default set to blank as requested -->
+              <!-- Less default explicitly kept blank as requested -->
               <input type="number" id="dispatchLess" placeholder="e.g. 5" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
             </div>
           </div>
@@ -470,7 +470,6 @@
         loadFarmerDirectory();
         loadDispatcherHistory();
         
-        // Restore active tab from localStorage on load/refresh so it doesn't jump back to overview
         let savedTab = localStorage.getItem('guruswamy_active_tab') || 'overview';
         switchTab(savedTab, false);
     }
@@ -527,7 +526,6 @@
             });
             showToast('Transport record saved successfully');
             
-            // RESET FORM COMPLETELY
             document.getElementById('transBoxes').value = '';
             document.getElementById('transRate').value = '25';
             document.getElementById('transNotes').value = '';
@@ -905,7 +903,6 @@
         let totalDeductions = transportDed + commDed + rentDed;
         let netPayable = gross - totalDeductions;
 
-        // SAVE TO DISPATCHER HISTORY IN FIREBASE
         try {
             await push(ref(db, `${dbPrefix}dispatcher_history`), {
                 date: dispatchDate,
@@ -918,7 +915,6 @@
                 timestamp: Date.now()
             });
 
-            // RESET DISPATCHER FORM
             document.getElementById('dispatchBoxes').value = '';
             document.getElementById('dispatchLess').value = '';
             document.getElementById('dispatchPrice').value = '';
@@ -930,7 +926,6 @@
             console.error(e);
         }
 
-        // OPEN WHATSAPP
         let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
         msg += `👤 *Farmer:* ${farmerName}\n`;
         msg += `📅 *Date:* ${dispatchDate}\n`;
