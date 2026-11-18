@@ -63,7 +63,7 @@
       <div class="flex items-center gap-2">
         <span class="text-lg">🚛</span>
         <div>
-          <h1 class="text-xs font-bold tracking-wide">Guruswamy Transportation</h1>
+          <h1 class="text-xs font-bold tracking-wide" id="headerTitle">Guruswamy Transportation</h1>
           <p class="text-sky-200 text-[9px]" id="headerSub">Overview & Farmer Earnings</p>
         </div>
       </div>
@@ -105,23 +105,14 @@
         </div>
       </div>
 
-      <!-- DAY-WISE SUMMARY -->
+      <!-- DAY-WISE SUMMARY (Latest Expanded, Others Collapsible) -->
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
-        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">📅 Day-wise Summary</h2>
-        <div class="overflow-x-auto max-h-72">
-          <table class="w-full text-xs">
-            <thead>
-              <tr class="bg-slate-50 text-slate-700 sticky top-0">
-                <th class="p-2.5 text-left">Date</th>
-                <th class="p-2.5 text-left">Farmers & Boxes</th>
-                <th class="p-2.5 text-center">Total Boxes</th>
-                <th class="p-2.5 text-right">Daily Earnings</th>
-              </tr>
-            </thead>
-            <tbody id="daySummaryTableBody">
-              <tr><td colspan="4" class="text-center text-slate-400 py-4">No daily records yet.</td></tr>
-            </tbody>
-          </table>
+        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+          <h2 class="text-base font-bold text-slate-800">📅 Day-wise Summary</h2>
+          <button onclick="toggleAllDays()" id="toggleDaysBtn" class="text-xs font-bold text-sky-700 hover:underline">📂 Expand All Days</button>
+        </div>
+        <div class="space-y-2.5" id="daySummaryContainer">
+          <div class="text-center text-slate-400 py-4">No daily records yet.</div>
         </div>
       </section>
 
@@ -144,7 +135,7 @@
                 <th class="p-2.5 text-left">Farmer Name</th>
                 <th class="p-2.5 text-center">Trips</th>
                 <th class="p-2.5 text-center">Total Boxes</th>
-                <th class="p-2.5 text-right">Amount Earned (@₹25)</th>
+                <th class="p-2.5 text-right">Amount Earned</th>
               </tr>
             </thead>
             <tbody id="farmerSummaryTableBody">
@@ -214,8 +205,8 @@
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-600 mb-1">Fixed Transport Rate (₹)</label>
-              <input type="number" id="transRate" value="25" readonly class="w-full rounded-xl p-2.5 text-sm bg-slate-100 text-slate-600 font-bold cursor-not-allowed">
+              <label class="block text-xs font-bold text-slate-600 mb-1">Transport Rate per Box (₹)</label>
+              <input type="number" id="transRate" value="25" oninput="calculateTransport()" class="w-full rounded-xl p-2.5 text-sm font-bold text-sky-900">
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-600 mb-1">Notes / Destination</label>
@@ -224,7 +215,7 @@
           </div>
 
           <div class="bg-sky-50 p-3 rounded-xl border border-sky-200 text-xs flex justify-between items-center font-bold text-sky-900">
-            <span>Total Transport Charges (Boxes × ₹25):</span>
+            <span>Total Transport Charges:</span>
             <span class="text-sm font-black">₹<span id="transTotalDisplay">0.00</span></span>
           </div>
 
@@ -248,13 +239,14 @@
                 <th class="p-2 text-left">Farmer</th>
                 <th class="p-2 text-center">Season</th>
                 <th class="p-2 text-center">Boxes</th>
+                <th class="p-2 text-center">Rate</th>
                 <th class="p-2 text-center">Total Fare</th>
                 <th class="p-2 text-left">Notes</th>
                 <th class="p-2 text-center">Action</th>
               </tr>
             </thead>
             <tbody id="transportTableBody">
-              <tr><td colspan="7" class="text-center text-slate-400 py-4">No records found.</td></tr>
+              <tr><td colspan="8" class="text-center text-slate-400 py-4">No records found.</td></tr>
             </tbody>
             <tfoot id="transportTableFooter" class="bg-sky-100/70 font-black text-sky-950 border-t-2 border-sky-300"></tfoot>
           </table>
@@ -318,9 +310,33 @@
             </div>
           </div>
 
-          <button onclick="sendWhatsAppMessageOnly()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5">
-            <span>💬</span> Send WhatsApp Message
+          <button onclick="saveAndSendWhatsApp()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+            <span>💬</span> Save to History & Send WhatsApp
           </button>
+        </div>
+      </section>
+
+      <!-- DISPATCHER HISTORY TABLE -->
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">📋 Dispatcher History Logs</h2>
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-sky-50 text-sky-900">
+                <th class="p-2 text-center">Date</th>
+                <th class="p-2 text-left">Farmer</th>
+                <th class="p-2 text-center">Grade</th>
+                <th class="p-2 text-center">Boxes</th>
+                <th class="p-2 text-center">Less</th>
+                <th class="p-2 text-center">Rate</th>
+                <th class="p-2 text-center">Net Payable</th>
+                <th class="p-2 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="dispatcherHistoryTableBody">
+              <tr><td colspan="8" class="text-center text-slate-400 py-4">No dispatcher history yet.</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
     </div>
@@ -407,6 +423,12 @@
     let currentUser = localStorage.getItem('guruswamy_logged_user') || 'Guruswamy';
     const dbPrefix = 'guruswamy_';
 
+    function updateHeaderTitle() {
+        let titleEl = document.getElementById('headerTitle');
+        if (titleEl) titleEl.innerText = currentUser;
+    }
+    updateHeaderTitle();
+
     function showToast(msg = "Action completed successfully") {
         const toast = document.getElementById('toastBanner');
         document.getElementById('toastText').innerText = msg;
@@ -415,8 +437,10 @@
     }
 
     window.handleLogin = function() {
-        currentUser = 'Guruswamy';
+        let uInput = document.getElementById('loginUser').value.trim();
+        if (uInput) currentUser = uInput.charAt(0).toUpperCase() + uInput.slice(1);
         localStorage.setItem('guruswamy_logged_user', currentUser);
+        updateHeaderTitle();
         document.getElementById('loginModal').classList.add('hidden');
         initGuruswamyApp();
     };
@@ -434,11 +458,14 @@
     }
 
     let cloudTransportRecords = [];
+    let dispatcherHistoryList = [];
     let farmerDirectory = {};
+    let allDaysExpanded = false;
 
     function initGuruswamyApp() {
         loadTransportData();
         loadFarmerDirectory();
+        loadDispatcherHistory();
     }
 
     window.switchTab = function(tabName) {
@@ -467,7 +494,8 @@
 
     window.calculateTransport = function() {
         let boxes = parseFloat(document.getElementById('transBoxes').value) || 0;
-        document.getElementById('transTotalDisplay').innerText = (boxes * 25).toFixed(2);
+        let rate = parseFloat(document.getElementById('transRate').value) || 25;
+        document.getElementById('transTotalDisplay').innerText = (boxes * rate).toFixed(2);
     };
 
     window.saveTransportRecord = async function() {
@@ -476,6 +504,7 @@
         let season = rawSeason === 'CUSTOM' ? document.getElementById('customSeasonInput').value.trim() : rawSeason;
         let farmerName = document.getElementById('transFarmerSelect').value;
         let boxes = parseFloat(document.getElementById('transBoxes').value) || 0;
+        let rate = parseFloat(document.getElementById('transRate').value) || 25;
         let notes = document.getElementById('transNotes').value.trim() || '-';
 
         if (!date || !farmerName || boxes <= 0 || !season) {
@@ -484,7 +513,7 @@
 
         try {
             await push(ref(db, `${dbPrefix}transport_records`), {
-                date, season, farmerName, boxes, rate: 25, totalFare: boxes * 25, notes, timestamp: Date.now()
+                date, season, farmerName, boxes, rate, totalFare: boxes * rate, notes, timestamp: Date.now()
             });
             showToast('Transport record saved successfully');
             document.getElementById('transBoxes').value = '';
@@ -500,11 +529,25 @@
                 let item = child.val();
                 item.id = child.key;
                 if (!item.season) item.season = "General";
+                if (!item.rate) item.rate = 25;
+                if (!item.totalFare) item.totalFare = item.boxes * item.rate;
                 cloudTransportRecords.push(item);
             });
             populateSeasonFilter();
             renderTransportRecords();
             renderOverview();
+        });
+    }
+
+    function loadDispatcherHistory() {
+        onValue(ref(db, `${dbPrefix}dispatcher_history`), (snapshot) => {
+            dispatcherHistoryList = [];
+            snapshot.forEach(child => {
+                let item = child.val();
+                item.id = child.key;
+                dispatcherHistoryList.push(item);
+            });
+            renderDispatcherHistoryTable();
         });
     }
 
@@ -521,6 +564,12 @@
         select.innerHTML = html;
         if (Array.from(seasons).includes(currentVal)) select.value = currentVal;
     }
+
+    window.toggleAllDays = function() {
+        allDaysExpanded = !allDaysExpanded;
+        document.getElementById('toggleDaysBtn').innerText = allDaysExpanded ? "📁 Collapse Older Days" : "📂 Expand All Days";
+        renderOverview();
+    };
 
     window.renderOverview = function() {
         const selectedSeason = document.getElementById('overviewSeasonFilter').value;
@@ -559,23 +608,36 @@
         document.getElementById('ovTotalBoxes').innerText = totalBoxes.toLocaleString('en-IN');
         document.getElementById('ovTotalFarmers').innerText = Object.keys(farmerMap).length;
 
-        const dayTbody = document.getElementById('daySummaryTableBody');
+        const dayContainer = document.getElementById('daySummaryContainer');
         const sortedDays = Object.entries(dayMap).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+
         if (sortedDays.length === 0) {
-            dayTbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-4">No daily records yet.</td></tr>';
+            dayContainer.innerHTML = '<div class="text-center text-slate-400 py-4">No daily records yet.</div>';
         } else {
-            dayTbody.innerHTML = sortedDays.map(([dStr, data]) => {
+            dayContainer.innerHTML = sortedDays.map(([dStr, data], index) => {
                 const farmerDetailsStr = Object.entries(data.farmers)
-                    .map(([fName, fBoxes]) => `${fName} (${fBoxes})`)
+                    .map(([fName, fBoxes]) => `${fName} (${fBoxes} boxes)`)
                     .join(', ');
 
+                let isLatest = index === 0;
+                let displayClass = (isLatest || allDaysExpanded) ? "" : "hidden";
+
                 return `
-                    <tr class="border-b border-slate-50">
-                        <td class="p-2.5 text-left font-bold text-slate-700">${dStr}</td>
-                        <td class="p-2.5 text-left font-semibold text-slate-800">${farmerDetailsStr}</td>
-                        <td class="p-2.5 text-center font-semibold text-slate-700">${data.totalBoxes.toLocaleString('en-IN')}</td>
-                        <td class="p-2.5 text-right font-extrabold text-sky-800">₹${data.totalEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                    </tr>
+                    <div class="border border-slate-100 rounded-xl p-3 bg-slate-50/50 day-card" data-index="${index}">
+                        <div class="flex justify-between items-center cursor-pointer" onclick="toggleDayCard(this)">
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-xs text-sky-900">📅 ${dStr}</span>
+                                ${isLatest ? '<span class="bg-emerald-100 text-emerald-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full">Latest</span>' : ''}
+                            </div>
+                            <div class="text-right">
+                                <span class="text-xs font-black text-sky-800">₹${data.totalEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                <span class="text-[10px] text-slate-400 ml-2">(${data.totalBoxes} boxes)</span>
+                            </div>
+                        </div>
+                        <div class="day-details mt-2 pt-2 border-t border-slate-200/60 text-xs text-slate-600 ${displayClass}">
+                            <div><strong class="text-slate-700">Farmers:</strong> ${farmerDetailsStr}</div>
+                        </div>
+                    </div>
                 `;
             }).join('');
         }
@@ -621,6 +683,11 @@
         }
     };
 
+    window.toggleDayCard = function(headerEl) {
+        let details = headerEl.nextElementSibling;
+        details.classList.toggle('hidden');
+    };
+
     window.shareFarmerSummaryWhatsApp = function() {
         const selectedSeason = document.getElementById('overviewSeasonFilter').value;
         const filteredRecords = selectedSeason === 'ALL' 
@@ -663,7 +730,7 @@
         filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
 
         if (filtered.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-400 py-4">No transport records found.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-4">No transport records found.</td></tr>';
             tfoot.innerHTML = '';
             return;
         }
@@ -680,6 +747,7 @@
                     <td class="p-2 text-left font-bold text-slate-800">${r.farmerName}</td>
                     <td class="p-2 text-center"><span class="bg-sky-50 text-sky-800 px-2 py-0.5 rounded-full text-[10px] font-bold">${r.season || 'General'}</span></td>
                     <td class="p-2 text-center">${r.boxes}</td>
+                    <td class="p-2 text-center">₹${r.rate || 25}</td>
                     <td class="p-2 text-center font-extrabold text-sky-800">₹${r.totalFare.toFixed(2)}</td>
                     <td class="p-2 text-left text-slate-500">${r.notes}</td>
                     <td class="p-2 text-center"><button onclick="deleteTransport('${r.id}')" class="text-rose-600 font-bold hover:underline">Del</button></td>
@@ -693,6 +761,7 @@
                 <td class="p-2 text-left">-</td>
                 <td class="p-2 text-center">-</td>
                 <td class="p-2 text-center">${totalBoxesSum}</td>
+                <td class="p-2 text-center">-</td>
                 <td class="p-2 text-center">₹${totalFareSum.toFixed(2)}</td>
                 <td class="p-2 text-left" colspan="2">-</td>
             </tr>
@@ -784,7 +853,7 @@
         document.getElementById('prevNetPayable').innerText = netPayable.toFixed(2);
     };
 
-    window.sendWhatsAppMessageOnly = function() {
+    window.saveAndSendWhatsApp = async function() {
         let dispatchDate = document.getElementById('dispatchDate').value;
         let farmerName = document.getElementById('dispatchFarmerSelect').value;
         if (!dispatchDate || !farmerName || !farmerDirectory[farmerName]) {
@@ -809,7 +878,23 @@
         let totalDeductions = transportDed + commDed + rentDed;
         let netPayable = gross - totalDeductions;
 
-        // OPEN WHATSAPP ONLY (NO SYNC)
+        // SAVE TO DISPATCHER HISTORY IN FIREBASE
+        try {
+            await push(ref(db, `${dbPrefix}dispatcher_history`), {
+                date: dispatchDate,
+                farmerName,
+                grade: gradeStr,
+                boxes,
+                less,
+                price,
+                netPayable,
+                timestamp: Date.now()
+            });
+        } catch(e) {
+            console.error(e);
+        }
+
+        // OPEN WHATSAPP
         let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
         msg += `👤 *Farmer:* ${farmerName}\n`;
         msg += `📅 *Date:* ${dispatchDate}\n`;
@@ -821,10 +906,62 @@
         msg += `   • Transport (@₹25): ₹${transportDed.toFixed(2)}\n`;
         msg += `   • Commission & Rent: ₹${(commDed + rentDed).toFixed(2)}\n`;
         msg += `💵 *Estimated Net Payable:* ₹${netPayable.toFixed(2)}\n\n`;
-        msg += `Regards,\n*Guruswamy Transport*`;
+        msg += `Regards,\n*${currentUser} Transport*`;
 
         window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
-        showToast('WhatsApp message opened successfully');
+        showToast('Saved to history & opened WhatsApp successfully');
+    };
+
+    function renderDispatcherHistoryTable() {
+        let tbody = document.getElementById('dispatcherHistoryTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+
+        if (dispatcherHistoryList.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-4">No dispatcher history yet.</td></tr>';
+            return;
+        }
+
+        dispatcherHistoryList.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+
+        dispatcherHistoryList.forEach(r => {
+            tbody.innerHTML += `
+                <tr class="border-b border-slate-50 hover:bg-sky-50/40">
+                    <td class="p-2 text-center">${r.date || '-'}</td>
+                    <td class="p-2 text-left font-bold text-slate-800">${r.farmerName || '-'}</td>
+                    <td class="p-2 text-center"><span class="bg-sky-100 text-sky-900 px-2 py-0.5 rounded-full font-bold text-[10px]">${r.grade || 'High'}</span></td>
+                    <td class="p-2 text-center">${r.boxes || 0}</td>
+                    <td class="p-2 text-center text-rose-600">${r.less || 0}</td>
+                    <td class="p-2 text-center">₹${r.price || 0}</td>
+                    <td class="p-2 text-center font-extrabold text-sky-800">₹${(r.netPayable || 0).toFixed(2)}</td>
+                    <td class="p-2 text-center space-x-1">
+                        <button onclick="editDispatcherRecord('${r.id}')" class="text-sky-600 font-bold hover:underline">Edit</button>
+                        <button onclick="deleteDispatcherRecord('${r.id}')" class="text-rose-600 font-bold hover:underline">Del</button>
+                    </td>
+                </tr>
+            `;
+        });
+    }
+
+    window.deleteDispatcherRecord = async function(id) {
+        if (confirm("Delete this history log?")) {
+            await remove(ref(db, `${dbPrefix}dispatcher_history/${id}`));
+            showToast("History log deleted");
+        }
+    };
+
+    window.editDispatcherRecord = function(id) {
+        let r = dispatcherHistoryList.find(x => x.id === id);
+        if (!r) return;
+        document.getElementById('dispatchDate').value = r.date || new Date().toISOString().split('T')[0];
+        document.getElementById('dispatchFarmerSelect').value = r.farmerName || '';
+        document.getElementById('dispatchGrade').value = r.grade || 'High';
+        document.getElementById('dispatchBoxes').value = r.boxes || '';
+        document.getElementById('dispatchLess').value = r.less !== undefined ? r.less : 5;
+        document.getElementById('dispatchPrice').value = r.price || '';
+        updateDispatchPreview();
+        remove(ref(db, `${dbPrefix}dispatcher_history/${id}`));
+        showToast("Loaded entry into form for editing. Click Save & Send to update.");
     };
 </script>
 
