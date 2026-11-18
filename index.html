@@ -89,26 +89,30 @@
         </select>
       </div>
 
-      <!-- High-Level Summary Cards -->
-      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <!-- High-Level Summary Cards (Synced with Expenses) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div class="bg-gradient-to-br from-sky-700 to-blue-800 p-4 rounded-2xl text-white col-span-2 sm:col-span-1 shadow-sm">
-          <div class="text-[10px] uppercase tracking-wider font-bold opacity-85 mb-1">💰 Total Transport Earned</div>
-          <div class="text-2xl font-black" id="ovTotalEarned">₹0.00</div>
+          <div class="text-[10px] uppercase tracking-wider font-bold opacity-85 mb-1">💰 Gross Earned</div>
+          <div class="text-xl font-black" id="ovTotalEarned">₹0.00</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-          <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">📦 Total Boxes Moved</div>
-          <div class="text-xl font-black text-slate-800" id="ovTotalBoxes">0</div>
+          <div class="text-[10px] uppercase tracking-wider font-bold text-rose-500 mb-1">💸 Total Expenses</div>
+          <div class="text-xl font-black text-rose-600" id="ovTotalExpenses">₹0.00</div>
         </div>
         <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
-          <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">👥 Farmers Served</div>
-          <div class="text-xl font-black text-sky-700" id="ovTotalFarmers">0</div>
+          <div class="text-[10px] uppercase tracking-wider font-bold text-emerald-600 mb-1">💎 Net Profit</div>
+          <div class="text-xl font-black text-emerald-700" id="ovNetProfit">₹0.00</div>
+        </div>
+        <div class="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm">
+          <div class="text-[10px] uppercase tracking-wider font-bold text-slate-400 mb-1">📦 Boxes / Farmers</div>
+          <div class="text-sm font-bold text-slate-800 mt-1"><span id="ovTotalBoxes">0</span> boxes (<span id="ovTotalFarmers">0</span> f.)</div>
         </div>
       </div>
 
-      <!-- DAY-WISE SUMMARY (Latest Expanded, Others Collapsible) -->
+      <!-- DAY-WISE SUMMARY -->
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
-          <h2 class="text-base font-bold text-slate-800">📅 Day-wise Summary</h2>
+          <h2 class="text-base font-bold text-slate-800">📅 Day-wise Financial Summary</h2>
           <button onclick="toggleAllDays()" id="toggleDaysBtn" class="text-xs font-bold text-sky-700 hover:underline">📂 Expand All Days</button>
         </div>
         <div class="space-y-2.5" id="daySummaryContainer">
@@ -254,7 +258,85 @@
       </section>
     </div>
 
-    <!-- ==================== TAB 3: WHATSAPP PRICE DISPATCHER ==================== -->
+    <!-- ==================== TAB 3: EXPENSES TRACKER (NEW) ==================== -->
+    <div id="tab-expenses" class="space-y-5 tab-content hidden">
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">💸 Track Transport Expenses</h2>
+
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Expense Date</label>
+              <input type="date" id="expDate" class="w-full rounded-xl p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Season</label>
+              <select id="expSeason" class="w-full rounded-xl p-2.5 text-sm font-bold text-sky-900 bg-sky-50">
+                <option value="2026">2026</option>
+                <option value="2027">2027</option>
+                <option value="2028">2028</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Expense Category</label>
+              <select id="expCategory" onchange="toggleCustomExpenseCategory(this.value)" class="w-full rounded-xl p-2.5 text-sm">
+                <option value="Fuel">⛽ Fuel / Diesel</option>
+                <option value="Hamali">📦 Hamali / Loading</option>
+                <option value="Driver Charges">👨‍✈️ Driver Charges</option>
+                <option value="Vehicle Maintenance">🔧 Vehicle Maintenance</option>
+                <option value="Toll & Parking">🛣️ Toll & Parking</option>
+                <option value="CUSTOM">+ Other / Custom Expense</option>
+              </select>
+              <input type="text" id="customExpCategoryInput" placeholder="e.g. Tyre puncture" class="hidden w-full mt-1.5 rounded-xl p-2 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Amount (₹)</label>
+              <input type="number" id="expAmount" placeholder="e.g. 500" class="w-full rounded-xl p-2.5 text-sm font-bold text-rose-600">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Notes / Description</label>
+            <input type="text" id="expNotes" placeholder="e.g. Diesel filled at highway bunk" class="w-full rounded-xl p-2.5 text-sm">
+          </div>
+
+          <button onclick="saveExpenseRecord()" class="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition">
+            💸 Save Expense Record
+          </button>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+          <h2 class="text-base font-bold text-slate-800">📋 Expenses History Logs</h2>
+          <input type="text" id="searchExp" placeholder="Search category..." oninput="renderExpenseRecords()" class="rounded-xl px-2.5 py-1 text-xs w-32">
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-rose-50 text-rose-900">
+                <th class="p-2 text-center">Date</th>
+                <th class="p-2 text-center">Season</th>
+                <th class="p-2 text-left">Category</th>
+                <th class="p-2 text-right">Amount</th>
+                <th class="p-2 text-left">Notes</th>
+                <th class="p-2 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="expenseTableBody">
+              <tr><td colspan="6" class="text-center text-slate-400 py-4">No expense records found.</td></tr>
+            </tbody>
+            <tfoot id="expenseTableFooter" class="bg-rose-100/70 font-black text-rose-950 border-t-2 border-rose-300"></tfoot>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== TAB 4: WHATSAPP PRICE DISPATCHER ==================== -->
     <div id="tab-whatsapp" class="space-y-5 tab-content hidden">
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">💬 Send Daily Price & Estimate via WhatsApp</h2>
@@ -341,7 +423,7 @@
       </section>
     </div>
 
-    <!-- ==================== TAB 4: FARMERS DIRECTORY ==================== -->
+    <!-- ==================== TAB 5: FARMERS DIRECTORY ==================== -->
     <div id="tab-farmers" class="space-y-5 tab-content hidden">
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <h2 class="text-base font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">👥 Manage Farmers Directory</h2>
@@ -380,7 +462,7 @@
 
   <!-- FIXED BOTTOM NAVIGATION BAR -->
   <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-lg z-40">
-    <div class="max-w-3xl mx-auto flex justify-around items-center py-2">
+    <div class="max-w-4xl mx-auto flex justify-around items-center py-2">
       <button onclick="switchTab('overview')" id="btn-bottom-overview" class="flex flex-col items-center gap-0.5 text-sky-700 font-bold transition">
         <span class="text-lg">📊</span>
         <span class="text-[10px]">Overview</span>
@@ -388,6 +470,10 @@
       <button onclick="switchTab('transport')" id="btn-bottom-transport" class="flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition">
         <span class="text-lg">🚛</span>
         <span class="text-[10px]">Transport</span>
+      </button>
+      <button onclick="switchTab('expenses')" id="btn-bottom-expenses" class="flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition">
+        <span class="text-lg">💸</span>
+        <span class="text-[10px]">Expenses</span>
       </button>
       <button onclick="switchTab('whatsapp')" id="btn-bottom-whatsapp" class="flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition">
         <span class="text-lg">💬</span>
@@ -418,11 +504,12 @@
     const db = getDatabase(app);
 
     document.getElementById('transDate').valueAsDate = new Date();
+    document.getElementById('expDate').valueAsDate = new Date();
     document.getElementById('dispatchDate').valueAsDate = new Date();
 
     let currentUser = localStorage.getItem('guruswamy_logged_user') || 'Guruswamy';
     const dbPrefix = 'guruswamy_';
-    let lastUsedSeason = "2026"; // Remembers the latest entered season
+    let lastUsedSeason = "2026";
 
     function updateHeaderTitle() {
         let titleEl = document.getElementById('headerTitle');
@@ -459,12 +546,14 @@
     }
 
     let cloudTransportRecords = [];
+    let cloudExpenseRecords = [];
     let dispatcherHistoryList = [];
     let farmerDirectory = {};
     let allDaysExpanded = false;
 
     function initGuruswamyApp() {
         loadTransportData();
+        loadExpenseData();
         loadFarmerDirectory();
         loadDispatcherHistory();
     }
@@ -474,14 +563,15 @@
         document.getElementById('tab-' + tabName).classList.remove('hidden');
         
         const titles = {
-            overview: "Overview & Farmer Earnings",
+            overview: "Overview & Financial Analytics",
             transport: "Transport Trip Records",
+            expenses: "Transport Expenses (Fuel, Hamali, etc.)",
             whatsapp: "Daily Price Dispatcher",
             farmers: "Farmers Directory Management"
         };
         document.getElementById('headerSub').innerText = titles[tabName] || "";
 
-        ['overview', 'transport', 'whatsapp', 'farmers'].forEach(t => {
+        ['overview', 'transport', 'expenses', 'whatsapp', 'farmers'].forEach(t => {
             const btn = document.getElementById('btn-bottom-' + t);
             if (btn) {
                 btn.className = t === tabName ? "flex flex-col items-center gap-0.5 text-sky-700 font-bold transition" : "flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition";
@@ -491,6 +581,10 @@
 
     window.toggleCustomSeason = function(val) {
         document.getElementById('customSeasonInput').classList.toggle('hidden', val !== 'CUSTOM');
+    };
+
+    window.toggleCustomExpenseCategory = function(val) {
+        document.getElementById('customExpCategoryInput').classList.toggle('hidden', val !== 'CUSTOM');
     };
 
     window.calculateTransport = function() {
@@ -512,7 +606,6 @@
             return showToast('Please fill Date, Season, select a Farmer, and Boxes');
         }
 
-        // Save last used season so subsequent entries default to it
         lastUsedSeason = season;
 
         try {
@@ -521,28 +614,56 @@
             });
             showToast('Transport record saved successfully');
             
-            // RESET FORM COMPLETELY (keeping rate at 25, clearing boxes & notes)
             document.getElementById('transBoxes').value = '';
             document.getElementById('transRate').value = '25';
             document.getElementById('transNotes').value = '';
             document.getElementById('transTotalDisplay').innerText = '0.00';
-            
-            // Ensure season dropdown defaults back to last saved season
-            setSeasonDropdownDefault(lastUsedSeason);
+            setSeasonDropdownDefaults(lastUsedSeason);
         } catch (error) { showToast("Error: " + error.message); }
     };
 
-    function setSeasonDropdownDefault(seasonName) {
-        const select = document.getElementById('transSeason');
-        let optionExists = Array.from(select.options).some(o => o.value === seasonName);
+    window.saveExpenseRecord = async function() {
+        let date = document.getElementById('expDate').value;
+        let season = document.getElementById('expSeason').value;
+        let rawCat = document.getElementById('expCategory').value;
+        let category = rawCat === 'CUSTOM' ? document.getElementById('customExpCategoryInput').value.trim() : rawCat;
+        let amount = parseFloat(document.getElementById('expAmount').value) || 0;
+        let notes = document.getElementById('expNotes').value.trim() || '-';
+
+        if (!date || !category || amount <= 0 || !season) {
+            return showToast('Please fill Date, Category, Season, and Amount');
+        }
+
+        try {
+            await push(ref(db, `${dbPrefix}expense_records`), {
+                date, season, category, amount, notes, timestamp: Date.now()
+            });
+            showToast('Expense record saved successfully');
+            
+            document.getElementById('expAmount').value = '';
+            document.getElementById('expNotes').value = '';
+            document.getElementById('customExpCategoryInput').value = '';
+            document.getElementById('customExpCategoryInput').classList.add('hidden');
+            document.getElementById('expCategory').value = 'Fuel';
+        } catch (error) { showToast("Error: " + error.message); }
+    };
+
+    function setSeasonDropdownDefaults(seasonName) {
+        const transSelect = document.getElementById('transSeason');
+        let optionExists = Array.from(transSelect.options).some(o => o.value === seasonName);
         if (!optionExists && seasonName) {
             let opt = document.createElement('option');
             opt.value = seasonName;
             opt.text = seasonName;
-            select.insertBefore(opt, select.lastElementChild);
+            transSelect.insertBefore(opt, transSelect.lastElementChild);
         }
-        select.value = seasonName;
+        transSelect.value = seasonName;
         document.getElementById('customSeasonInput').classList.add('hidden');
+
+        const expSelect = document.getElementById('expSeason');
+        if (Array.from(expSelect.options).some(o => o.value === seasonName)) {
+            expSelect.value = seasonName;
+        }
     }
 
     function loadTransportData() {
@@ -557,17 +678,28 @@
                 cloudTransportRecords.push(item);
             });
 
-            // Find latest entry by timestamp to set default season
             if (cloudTransportRecords.length > 0) {
                 let sorted = [...cloudTransportRecords].sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                if (sorted[0].season) {
-                    lastUsedSeason = sorted[0].season;
-                }
+                if (sorted[0].season) lastUsedSeason = sorted[0].season;
             }
 
             populateSeasonFilter();
-            setSeasonDropdownDefault(lastUsedSeason);
+            setSeasonDropdownDefaults(lastUsedSeason);
             renderTransportRecords();
+            renderOverview();
+        });
+    }
+
+    function loadExpenseData() {
+        onValue(ref(db, `${dbPrefix}expense_records`), (snapshot) => {
+            cloudExpenseRecords = [];
+            snapshot.forEach(child => {
+                let item = child.val();
+                item.id = child.key;
+                if (!item.season) item.season = "2026";
+                cloudExpenseRecords.push(item);
+            });
+            renderExpenseRecords();
             renderOverview();
         });
     }
@@ -589,6 +721,7 @@
         const currentVal = select.value;
         const seasons = new Set(["2026", "2027", "2028"]);
         cloudTransportRecords.forEach(r => { if (r.season) seasons.add(r.season); });
+        cloudExpenseRecords.forEach(e => { if (e.season) seasons.add(e.season); });
 
         let html = `<option value="ALL">🌐 Overall (All Seasons)</option>`;
         Array.from(seasons).sort().forEach(s => {
@@ -606,9 +739,14 @@
 
     window.renderOverview = function() {
         const selectedSeason = document.getElementById('overviewSeasonFilter').value;
-        const filteredRecords = selectedSeason === 'ALL' 
+        
+        const filteredTransport = selectedSeason === 'ALL' 
             ? cloudTransportRecords 
             : cloudTransportRecords.filter(r => r.season === selectedSeason);
+
+        const filteredExpenses = selectedSeason === 'ALL'
+            ? cloudExpenseRecords
+            : cloudExpenseRecords.filter(e => e.season === selectedSeason);
 
         document.getElementById('farmerBreakdownSubtitle').innerText = selectedSeason === 'ALL'
             ? "Showing overall earnings across all seasons"
@@ -616,10 +754,13 @@
 
         let totalEarned = 0;
         let totalBoxes = 0;
+        let totalExpenses = 0;
+
         const farmerMap = {};
         const dayMap = {};
 
-        filteredRecords.forEach(r => {
+        // Aggregate Earnings & Boxes
+        filteredTransport.forEach(r => {
             totalEarned += r.totalFare || 0;
             totalBoxes += r.boxes || 0;
 
@@ -630,14 +771,27 @@
             farmerMap[fName].earned += r.totalFare || 0;
 
             const dStr = r.date || 'Unknown';
-            if (!dayMap[dStr]) dayMap[dStr] = { totalBoxes: 0, totalEarned: 0, farmers: {} };
+            if (!dayMap[dStr]) dayMap[dStr] = { totalBoxes: 0, totalEarned: 0, totalExpenses: 0, farmers: {}, expenses: [] };
             dayMap[dStr].totalBoxes += r.boxes || 0;
             dayMap[dStr].totalEarned += r.totalFare || 0;
             if (!dayMap[dStr].farmers[fName]) dayMap[dStr].farmers[fName] = 0;
             dayMap[dStr].farmers[fName] += r.boxes || 0;
         });
 
+        // Aggregate Expenses
+        filteredExpenses.forEach(e => {
+            totalExpenses += e.amount || 0;
+            const dStr = e.date || 'Unknown';
+            if (!dayMap[dStr]) dayMap[dStr] = { totalBoxes: 0, totalEarned: 0, totalExpenses: 0, farmers: {}, expenses: [] };
+            dayMap[dStr].totalExpenses += e.amount || 0;
+            dayMap[dStr].expenses.push({ category: e.category, amount: e.amount, notes: e.notes });
+        });
+
+        let netProfit = totalEarned - totalExpenses;
+
         document.getElementById('ovTotalEarned').innerText = `₹${totalEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+        document.getElementById('ovTotalExpenses').innerText = `₹${totalExpenses.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+        document.getElementById('ovNetProfit').innerText = `₹${netProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
         document.getElementById('ovTotalBoxes').innerText = totalBoxes.toLocaleString('en-IN');
         document.getElementById('ovTotalFarmers').innerText = Object.keys(farmerMap).length;
 
@@ -651,9 +805,15 @@
             let remainingEntries = sortedDays.slice(1);
 
             const renderCardHtml = ([dStr, data], isLatest = false) => {
-                const farmerDetailsStr = Object.entries(data.farmers)
-                    .map(([fName, fBoxes]) => `${fName} (${fBoxes} boxes)`)
-                    .join(', ');
+                const farmerDetailsStr = Object.keys(data.farmers).length > 0 
+                    ? Object.entries(data.farmers).map(([fName, fBoxes]) => `${fName} (${fBoxes} boxes)`).join(', ')
+                    : 'None';
+
+                const expenseDetailsStr = data.expenses.length > 0
+                    ? data.expenses.map(exp => `${exp.category}: ₹${exp.amount}`).join(', ')
+                    : 'None';
+
+                let dayNet = data.totalEarned - data.totalExpenses;
 
                 return `
                     <div class="border border-slate-100 rounded-xl p-3 bg-slate-50/50">
@@ -663,12 +823,13 @@
                                 ${isLatest ? '<span class="bg-emerald-100 text-emerald-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full">Latest</span>' : ''}
                             </div>
                             <div class="text-right">
-                                <span class="text-xs font-black text-sky-800">₹${data.totalEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
-                                <span class="text-[10px] text-slate-400 ml-2">(${data.totalBoxes} boxes)</span>
+                                <span class="text-xs font-black text-emerald-700">Net: ₹${dayNet.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</span>
+                                <span class="text-[10px] text-slate-400 ml-1">(Earned: ₹${data.totalEarned} | Exp: ₹${data.totalExpenses})</span>
                             </div>
                         </div>
-                        <div class="mt-2 pt-2 border-t border-slate-200/60 text-xs text-slate-600">
-                            <div><strong class="text-slate-700">Farmers:</strong> ${farmerDetailsStr}</div>
+                        <div class="mt-2 pt-2 border-t border-slate-200/60 text-xs text-slate-600 space-y-1">
+                            <div><strong class="text-slate-700">Trips/Farmers:</strong> ${farmerDetailsStr}</div>
+                            <div><strong class="text-rose-700">Expenses:</strong> ${expenseDetailsStr}</div>
                         </div>
                     </div>
                 `;
@@ -707,10 +868,15 @@
         const seasonMap = {};
         cloudTransportRecords.forEach(r => {
             const s = r.season || '2026';
-            if (!seasonMap[s]) seasonMap[s] = { farmers: new Set(), boxes: 0, earned: 0 };
+            if (!seasonMap[s]) seasonMap[s] = { farmers: new Set(), boxes: 0, earned: 0, expenses: 0 };
             seasonMap[s].farmers.add((r.farmerName || '').trim().toLowerCase());
             seasonMap[s].boxes += r.boxes || 0;
             seasonMap[s].earned += r.totalFare || 0;
+        });
+        cloudExpenseRecords.forEach(e => {
+            const s = e.season || '2026';
+            if (!seasonMap[s]) seasonMap[s] = { farmers: new Set(), boxes: 0, earned: 0, expenses: 0 };
+            seasonMap[s].expenses += e.amount || 0;
         });
 
         const seasonTbody = document.getElementById('seasonSummaryTableBody');
@@ -723,7 +889,7 @@
                     <td class="p-2.5 text-left font-bold text-slate-800">${sName}</td>
                     <td class="p-2.5 text-center text-slate-600">${data.farmers.size}</td>
                     <td class="p-2.5 text-center font-semibold text-slate-700">${data.boxes.toLocaleString('en-IN')}</td>
-                    <td class="p-2.5 text-right font-black text-emerald-700">₹${data.earned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    <td class="p-2.5 text-right font-black text-emerald-700">₹${data.earned.toLocaleString('en-IN', { minimumFractionDigits: 2 })} (Net: ₹${(data.earned - data.expenses).toLocaleString('en-IN')})</td>
                 </tr>
             `).join('');
         }
@@ -809,8 +975,52 @@
         `;
     };
 
+    window.renderExpenseRecords = function() {
+        let tbody = document.getElementById('expenseTableBody');
+        let tfoot = document.getElementById('expenseTableFooter');
+        let search = document.getElementById('searchExp').value.toLowerCase().trim();
+        tbody.innerHTML = '';
+
+        let filtered = cloudExpenseRecords.filter(e => search === '' || e.category.toLowerCase().includes(search));
+        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-slate-400 py-4">No expense records found.</td></tr>';
+            tfoot.innerHTML = '';
+            return;
+        }
+
+        let totalExpenseSum = 0;
+
+        filtered.forEach(e => {
+            totalExpenseSum += e.amount;
+            tbody.innerHTML += `
+                <tr class="border-b border-slate-50">
+                    <td class="p-2 text-center">${e.date}</td>
+                    <td class="p-2 text-center"><span class="bg-rose-50 text-rose-800 px-2 py-0.5 rounded-full text-[10px] font-bold">${e.season || '2026'}</span></td>
+                    <td class="p-2 text-left font-bold text-slate-800">${e.category}</td>
+                    <td class="p-2 text-right font-extrabold text-rose-600">₹${e.amount.toFixed(2)}</td>
+                    <td class="p-2 text-left text-slate-500">${e.notes}</td>
+                    <td class="p-2 text-center"><button onclick="deleteExpense('${e.id}')" class="text-rose-600 font-bold hover:underline">Del</button></td>
+                </tr>
+            `;
+        });
+
+        tfoot.innerHTML = `
+            <tr>
+                <td class="p-2 text-center uppercase" colspan="3">TOTAL EXPENSES</td>
+                <td class="p-2 text-right">₹${totalExpenseSum.toFixed(2)}</td>
+                <td class="p-2 text-left" colspan="2">-</td>
+            </tr>
+        `;
+    };
+
     window.deleteTransport = async function(id) {
-        if (confirm("Delete this record?")) await remove(ref(db, `${dbPrefix}transport_records/${id}`));
+        if (confirm("Delete this transport record?")) await remove(ref(db, `${dbPrefix}transport_records/${id}`));
+    };
+
+    window.deleteExpense = async function(id) {
+        if (confirm("Delete this expense record?")) await remove(ref(db, `${dbPrefix}expense_records/${id}`));
     };
 
     function loadFarmerDirectory() {
@@ -962,7 +1172,7 @@
     function renderDispatcherHistoryTable() {
         let tbody = document.getElementById('dispatcherHistoryTableBody');
         if (!tbody) return;
-        tbody.innerHTML = '';
+        tbody.indexHtml = '';
 
         if (dispatcherHistoryList.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8" class="text-center text-slate-400 py-4">No dispatcher history yet.</td></tr>';
