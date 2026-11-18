@@ -677,7 +677,6 @@
             ? [...cloudTransportRecords] 
             : cloudTransportRecords.filter(r => r.season === selectedSeason);
 
-        // Apply earnings date filters
         if (filterType === 'MONTHLY' || filterType === 'YEAR_MONTH') {
             let mInput = document.getElementById(filterType === 'MONTHLY' ? 'filterMonthInput' : 'filterYearMonthInput');
             if (mInput && mInput.value) {
