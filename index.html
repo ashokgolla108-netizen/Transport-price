@@ -516,7 +516,10 @@
                 date, season, farmerName, boxes, rate, totalFare: boxes * rate, notes, timestamp: Date.now()
             });
             showToast('Transport record saved successfully');
+            
+            // RESET FORM COMPLETELY (Resetting Rate back to 25, clearing boxes & notes)
             document.getElementById('transBoxes').value = '';
+            document.getElementById('transRate').value = '25';
             document.getElementById('transNotes').value = '';
             document.getElementById('transTotalDisplay').innerText = '0.00';
         } catch (error) { showToast("Error: " + error.message); }
@@ -890,6 +893,14 @@
                 netPayable,
                 timestamp: Date.now()
             });
+
+            // RESET DISPATCHER FORM
+            document.getElementById('dispatchBoxes').value = '';
+            document.getElementById('dispatchPrice').value = '';
+            document.getElementById('prevSoldBoxes').innerText = '0';
+            document.getElementById('prevGross').innerText = '0.00';
+            document.getElementById('prevDeductions').innerText = '0.00';
+            document.getElementById('prevNetPayable').innerText = '0.00';
         } catch(e) {
             console.error(e);
         }
