@@ -106,6 +106,26 @@
         </div>
       </div>
 
+      <!-- DAY-WISE SUMMARY (MOVED TO TOP) -->
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">📅 Day-wise Summary</h2>
+        <div class="overflow-x-auto max-h-72">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-slate-700 sticky top-0">
+                <th class="p-2.5 text-left">Date</th>
+                <th class="p-2.5 text-left">Farmers & Boxes</th>
+                <th class="p-2.5 text-center">Total Boxes</th>
+                <th class="p-2.5 text-right">Daily Earnings</th>
+              </tr>
+            </thead>
+            <tbody id="daySummaryTableBody">
+              <tr><td colspan="4" class="text-center text-slate-400 py-4">No daily records yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
       <!-- FARMER-WISE EARNINGS BREAKDOWN -->
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
         <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
@@ -155,26 +175,6 @@
         </div>
       </section>
 
-      <!-- DAY-WISE SUMMARY (WITH FARMER BREAKDOWN IN BRACKETS) -->
-      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
-        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">📅 Day-wise Summary</h2>
-        <div class="overflow-x-auto max-h-72">
-          <table class="w-full text-xs">
-            <thead>
-              <tr class="bg-slate-50 text-slate-700 sticky top-0">
-                <th class="p-2.5 text-left">Date</th>
-                <th class="p-2.5 text-left">Farmers & Boxes</th>
-                <th class="p-2.5 text-center">Total Boxes</th>
-                <th class="p-2.5 text-right">Daily Earnings</th>
-              </tr>
-            </thead>
-            <tbody id="daySummaryTableBody">
-              <tr><td colspan="4" class="text-center text-slate-400 py-4">No daily records yet.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-
     </div>
 
     <!-- ==================== TAB 2: TRANSPORTATION RECORDS ==================== -->
@@ -202,7 +202,7 @@
 
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-600 mb-1">Farmer Name (From Directory)</label>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Farmer Name</label>
               <select id="transFarmerSelect" class="w-full rounded-xl p-2.5 text-sm">
                 <option value="">-- Select Farmer --</option>
               </select>
@@ -230,7 +230,7 @@
           </div>
 
           <button onclick="saveTransportRecord()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition">
-            ☁️ Save Transport Record to Cloud
+            ☁️ Save Transport Record
           </button>
         </div>
       </section>
@@ -263,48 +263,15 @@
       </section>
     </div>
 
-    <!-- ==================== TAB 3: FARMERS DIRECTORY ==================== -->
-    <div id="tab-farmers" class="space-y-5 tab-content hidden">
-      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
-        <h2 class="text-base font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">👥 Manage Farmers Directory</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
-          <input type="text" id="farmerNameInput" placeholder="Farmer Name (e.g. Ashok)" class="rounded-xl p-2.5 text-sm">
-          <input type="text" id="farmerPhoneInput" placeholder="WhatsApp Phone (e.g. 919876543210)" class="rounded-xl p-2.5 text-sm">
-          <button onclick="saveFarmerContact()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
-            ➕ Add / Update Farmer
-          </button>
-        </div>
-        <div class="overflow-x-auto mt-4">
-          <table class="w-full text-xs">
-            <thead>
-              <tr class="bg-slate-50 text-slate-700">
-                <th class="p-2.5 text-left">Farmer Name</th>
-                <th class="p-2.5 text-left">WhatsApp Number</th>
-                <th class="p-2.5 text-center">Action</th>
-              </tr>
-            </thead>
-            <tbody id="farmersTableBody">
-              <tr><td colspan="3" class="text-center text-slate-400 py-4">No farmers added yet.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-
-    <!-- ==================== TAB 4: WHATSAPP PRICE DISPATCHER ==================== -->
+    <!-- ==================== TAB 3: WHATSAPP PRICE DISPATCHER ==================== -->
     <div id="tab-whatsapp" class="space-y-5 tab-content hidden">
       <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
-        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
-          <h2 class="text-base font-bold text-slate-800">💬 Send Daily Price & Estimate via WhatsApp</h2>
-          <button onclick="broadcastPriceToAll()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow-sm transition flex items-center gap-1">
-            <span>📢</span> Broadcast to All Enrolled Farmers
-          </button>
-        </div>
+        <h2 class="text-base font-bold text-slate-800 mb-3 pb-2 border-b border-slate-100">💬 Send Daily Price & Estimate via WhatsApp</h2>
 
         <div class="space-y-3">
           <div class="grid grid-cols-2 gap-3">
             <div>
-              <label class="block text-xs font-bold text-slate-600 mb-1">Select Farmer (For Individual Send)</label>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Select Farmer</label>
               <select id="dispatchFarmerSelect" onchange="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
                 <option value="">-- Select Farmer --</option>
               </select>
@@ -346,15 +313,43 @@
           </div>
 
           <button onclick="sendWhatsAppMessage()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5">
-            <span>💬</span> Send to Selected Farmer
+            <span>💬</span> Send WhatsApp Message
           </button>
+        </div>
+      </section>
+    </div>
+
+    <!-- ==================== TAB 4: FARMERS DIRECTORY ==================== -->
+    <div id="tab-farmers" class="space-y-5 tab-content hidden">
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">👥 Manage Farmers Directory</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+          <input type="text" id="farmerNameInput" placeholder="Farmer Name (e.g. Ashok)" class="rounded-xl p-2.5 text-sm">
+          <input type="text" id="farmerPhoneInput" placeholder="WhatsApp Phone (e.g. 919876543210)" class="rounded-xl p-2.5 text-sm">
+          <button onclick="saveFarmerContact()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
+            ➕ Add / Update Farmer
+          </button>
+        </div>
+        <div class="overflow-x-auto mt-4">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-slate-700">
+                <th class="p-2.5 text-left">Farmer Name</th>
+                <th class="p-2.5 text-left">WhatsApp Number</th>
+                <th class="p-2.5 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="farmersTableBody">
+              <tr><td colspan="3" class="text-center text-slate-400 py-4">No farmers added yet.</td></tr>
+            </tbody>
+          </table>
         </div>
       </section>
     </div>
 
   </main>
 
-  <!-- FIXED BOTTOM NAVIGATION BAR -->
+  <!-- FIXED BOTTOM NAVIGATION BAR (Reordered as requested) -->
   <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-lg z-40">
     <div class="max-w-3xl mx-auto flex justify-around items-center py-2">
       <button onclick="switchTab('overview')" id="btn-bottom-overview" class="flex flex-col items-center gap-0.5 text-sky-700 font-bold transition">
@@ -365,13 +360,13 @@
         <span class="text-lg">🚛</span>
         <span class="text-[10px]">Transport</span>
       </button>
-      <button onclick="switchTab('farmers')" id="btn-bottom-farmers" class="flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition">
-        <span class="text-lg">👥</span>
-        <span class="text-[10px]">Farmers</span>
-      </button>
       <button onclick="switchTab('whatsapp')" id="btn-bottom-whatsapp" class="flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition">
         <span class="text-lg">💬</span>
         <span class="text-[10px]">Dispatcher</span>
+      </button>
+      <button onclick="switchTab('farmers')" id="btn-bottom-farmers" class="flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition">
+        <span class="text-lg">👥</span>
+        <span class="text-[10px]">Farmers</span>
       </button>
     </div>
   </footer>
@@ -451,12 +446,12 @@
         const titles = {
             overview: "Overview & Farmer Earnings",
             transport: "Transport Trip Records",
-            farmers: "Farmers Directory Management",
-            whatsapp: "Daily Price Dispatcher"
+            whatsapp: "Daily Price Dispatcher",
+            farmers: "Farmers Directory Management"
         };
         document.getElementById('headerSub').innerText = titles[tabName] || "";
 
-        ['overview', 'transport', 'farmers', 'whatsapp'].forEach(t => {
+        ['overview', 'transport', 'whatsapp', 'farmers'].forEach(t => {
             const btn = document.getElementById('btn-bottom-' + t);
             if (btn) {
                 btn.className = t === tabName ? "flex flex-col items-center gap-0.5 text-sky-700 font-bold transition" : "flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition";
@@ -565,7 +560,29 @@
         document.getElementById('ovTotalBoxes').innerText = totalBoxes.toLocaleString('en-IN');
         document.getElementById('ovTotalFarmers').innerText = Object.keys(farmerMap).length;
 
-        // 1. Render Farmer-wise Earnings Table
+        // 1. Render Day-wise Summary Table (At the top of Overview)
+        const dayTbody = document.getElementById('daySummaryTableBody');
+        const sortedDays = Object.entries(dayMap).sort((a, b) => new Date(b[0]) - new Date(a[0]));
+        if (sortedDays.length === 0) {
+            dayTbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-4">No daily records yet.</td></tr>';
+        } else {
+            dayTbody.innerHTML = sortedDays.map(([dStr, data]) => {
+                const farmerDetailsStr = Object.entries(data.farmers)
+                    .map(([fName, fBoxes]) => `${fName} (${fBoxes})`)
+                    .join(', ');
+
+                return `
+                    <tr class="border-b border-slate-50">
+                        <td class="p-2.5 text-left font-bold text-slate-700">${dStr}</td>
+                        <td class="p-2.5 text-left font-semibold text-slate-800">${farmerDetailsStr}</td>
+                        <td class="p-2.5 text-center font-semibold text-slate-700">${data.totalBoxes.toLocaleString('en-IN')}</td>
+                        <td class="p-2.5 text-right font-extrabold text-sky-800">₹${data.totalEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // 2. Render Farmer-wise Earnings Table
         const farmerTbody = document.getElementById('farmerSummaryTableBody');
         const sortedFarmers = Object.entries(farmerMap).sort((a, b) => b[1].earned - a[1].earned);
 
@@ -582,7 +599,7 @@
             `).join('');
         }
 
-        // 2. Render Season-wise Summary Table
+        // 3. Render Season-wise Summary Table
         const seasonMap = {};
         cloudTransportRecords.forEach(r => {
             const s = r.season || 'General';
@@ -605,28 +622,6 @@
                     <td class="p-2.5 text-right font-black text-emerald-700">₹${data.earned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
                 </tr>
             `).join('');
-        }
-
-        // 3. Render Day-wise Summary Table with farmer breakdown in brackets
-        const dayTbody = document.getElementById('daySummaryTableBody');
-        const sortedDays = Object.entries(dayMap).sort((a, b) => new Date(b[0]) - new Date(a[0]));
-        if (sortedDays.length === 0) {
-            dayTbody.innerHTML = '<tr><td colspan="4" class="text-center text-slate-400 py-4">No daily records yet.</td></tr>';
-        } else {
-            dayTbody.innerHTML = sortedDays.map(([dStr, data]) => {
-                const farmerDetailsStr = Object.entries(data.farmers)
-                    .map(([fName, fBoxes]) => `${fName} (${fBoxes})`)
-                    .join(', ');
-
-                return `
-                    <tr class="border-b border-slate-50">
-                        <td class="p-2.5 text-left font-bold text-slate-700">${dStr}</td>
-                        <td class="p-2.5 text-left font-semibold text-slate-800">${farmerDetailsStr}</td>
-                        <td class="p-2.5 text-center font-semibold text-slate-700">${data.totalBoxes.toLocaleString('en-IN')}</td>
-                        <td class="p-2.5 text-right font-extrabold text-sky-800">₹${data.totalEarned.toLocaleString('en-IN', { minimumFractionDigits: 2 })}</td>
-                    </tr>
-                `;
-            }).join('');
         }
     };
 
@@ -724,8 +719,8 @@
 
     window.saveFarmerContact = async function() {
         let name = document.getElementById('farmerNameInput').value.trim();
-        let phone = document.getElementById('farmerPhoneInput').value.trim();
-        if (!name || !phone) return showToast('Please enter both name and phone number');
+        let phone = document.getElementById('farmerPhoneInput').value.trim().replace(/[^0-9]/g, '');
+        if (!name || !phone) return showToast('Please enter both name and a valid phone number');
 
         try {
             await set(ref(db, `${dbPrefix}farmer_directory/${name}`), { phone });
@@ -790,7 +785,7 @@
 
     window.sendWhatsAppMessage = function() {
         let farmerName = document.getElementById('dispatchFarmerSelect').value;
-        if (!farmerName || !farmerDirectory[farmerName]) return showToast('Please select a valid farmer from directory');
+        if (!farmerName || !farmerDirectory[farmerName]) return showToast('Please select a valid farmer');
         
         let phone = farmerDirectory[farmerName].phone;
         let grade = document.getElementById('dispatchGrade').value;
@@ -821,39 +816,6 @@
         msg += `Regards,\n*Guruswamy Transport*`;
 
         window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
-    };
-
-    window.broadcastPriceToAll = function() {
-        let farmerNames = Object.keys(farmerDirectory);
-        if (farmerNames.length === 0) return showToast('No farmers in directory to broadcast to');
-
-        let grade = document.getElementById('dispatchGrade').value;
-        let boxes = parseFloat(document.getElementById('dispatchBoxes').value) || 100;
-        let less = parseFloat(document.getElementById('dispatchLess').value) || 5;
-        let price = parseFloat(document.getElementById('dispatchPrice').value) || 0;
-
-        if (price <= 0) return showToast('Please enter a valid auction price before broadcasting');
-
-        let soldBoxes = Math.max(0, boxes - less);
-        let gross = soldBoxes * price;
-        let transportDed = boxes * 25;
-        let commDed = soldBoxes * (price * 0.10);
-        let rentDed = boxes * 4;
-        let totalDeductions = transportDed + commDed + rentDed;
-        let netPayable = gross - totalDeductions;
-
-        let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
-        msg += `📦 *Quality/Grade:* ${grade}\n`;
-        msg += `💰 *Auction Rate:* ₹${price}/unit\n\n`;
-        msg += `📊 *Sample Calculation:* Boxes: ${boxes} | Less: ${less} | Sold: ${soldBoxes}\n`;
-        msg += `📈 *Gross:* ₹${gross.toFixed(2)} | *Deductions:* ₹${totalDeductions.toFixed(2)}\n`;
-        msg += `💵 *Estimated Net Payable:* ₹${netPayable.toFixed(2)}\n\n`;
-        msg += `Regards,\n*Guruswamy Transport*`;
-
-        // Prompt user to broadcast sequentially or open the first phone number
-        let firstPhone = farmerDirectory[farmerNames[0]].phone;
-        window.open(`https://api.whatsapp.com/send?phone=${firstPhone}&text=${encodeURIComponent(msg)}`, '_blank');
-        showToast(`Broadcasting to ${farmerNames.length} enrolled farmers...`);
     };
 </script>
 
