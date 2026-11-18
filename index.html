@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guruswamy Transportation & Price Dispatcher</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #f8fafc;
+            --text-main: #0f172a;
+        }
+        body { background-color: var(--bg); color: var(--text-main); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        input[type="text"], input[type="number"], input[type="date"], select {
+            border: 1.5px solid #cbd5e1;
+            transition: all 0.2s ease-in-out;
+            background-color: #ffffff;
+        }
+        input[type="text"]:focus, input[type="number"]:focus, input[type="date"]:focus, select:focus {
+            border-color: #0284c7 !important;
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15) !important;
+            outline: none !important;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-20">
+
+  <!-- IN-PAGE TOAST NOTIFICATION -->
+  <div id="toastBanner" class="fixed top-16 left-1/2 transform -translate-x-1/2 z-50 bg-sky-800 text-white px-5 py-2.5 rounded-2xl shadow-xl text-xs font-bold transition-all duration-300 opacity-0 pointer-events-none flex items-center gap-2">
+    <span>✅</span> <span id="toastText">Action completed successfully</span>
+  </div>
+
+  <!-- LOGIN MODAL -->
+  <div id="loginModal" class="fixed inset-0 bg-slate-900/80 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 text-center space-y-4 border border-slate-100">
+      <div class="w-16 h-16 bg-sky-50 text-sky-700 rounded-2xl mx-auto flex items-center justify-center text-3xl font-bold shadow-inner">🚛</div>
+      <div>
+        <h2 class="text-xl font-extrabold text-slate-800">Guruswamy Transport System</h2>
+        <p class="text-xs text-slate-500 mt-1">Please sign in to continue</p>
+      </div>
+
+      <div class="space-y-3 pt-2 text-left">
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">User ID</label>
+          <input type="text" id="loginUser" placeholder="Enter user id (guruswamy)" class="w-full rounded-xl p-3 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-bold text-slate-600 mb-1">Password</label>
+          <input type="password" id="loginPass" placeholder="Enter password (1234)" class="w-full rounded-xl p-3 text-sm">
+        </div>
+        <div id="loginError" class="text-xs text-rose-600 font-semibold text-center hidden">Invalid User ID or Password!</div>
+      </div>
+
+      <button onclick="handleLogin()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl text-sm shadow-lg transition">
+        Sign In 🚀
+      </button>
+      <div class="text-[11px] text-slate-400">Tempo Transport & WhatsApp Dispatcher</div>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-sky-800 to-sky-700 text-white py-3 shadow-md sticky top-0 z-40">
+    <div class="max-w-4xl mx-auto px-4 flex justify-between items-center gap-2">
+      <div class="flex items-center gap-2">
+        <span class="text-lg">🚛</span>
+        <div>
+          <h1 class="text-xs font-bold tracking-wide">Guruswamy Transportation</h1>
+          <p class="text-sky-200 text-[9px]">Tempo Transport & Farmer Dispatcher</p>
+        </div>
+      </div>
+      <div>
+        <button onclick="logout()" class="bg-sky-900 hover:bg-black text-white text-[10px] font-bold px-2.5 py-1.5 rounded-xl border border-sky-600 shadow-sm transition flex items-center gap-1">
+          <span>🚪</span> Logout
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-4xl mx-auto px-4 mt-5 space-y-5">
+
+    <!-- TAB 1: TRANSPORTATION RECORDS -->
+    <div id="tab-transport" class="space-y-5 tab-content">
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">📦 Add Farmer Transport Record</h2>
+
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Date</label>
+              <input type="date" id="transDate" class="w-full rounded-xl p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Farmer Name</label>
+              <input type="text" id="transFarmerName" placeholder="e.g. Ashok" class="w-full rounded-xl p-2.5 text-sm">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Total Boxes / Units</label>
+              <input type="number" id="transBoxes" placeholder="e.g. 100" oninput="calculateTransport()" class="w-full rounded-xl p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Fixed Transport Rate (₹)</label>
+              <input type="number" id="transRate" value="25" readonly class="w-full rounded-xl p-2.5 text-sm bg-slate-100 text-slate-600 font-bold cursor-not-allowed">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Notes / Destination</label>
+            <input type="text" id="transNotes" placeholder="e.g. Market trip details" class="w-full rounded-xl p-2.5 text-sm">
+          </div>
+
+          <div class="bg-sky-50 p-3 rounded-xl border border-sky-200 text-xs flex justify-between items-center font-bold text-sky-900">
+            <span>Total Transport Charges (Boxes × ₹25):</span>
+            <span class="text-sm font-black">₹<span id="transTotalDisplay">0.00</span></span>
+          </div>
+
+          <button onclick="saveTransportRecord()" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition">
+            ☁️ Save Transport Record to Cloud
+          </button>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <div class="flex justify-between items-center mb-3 pb-2 border-b border-slate-100">
+          <h2 class="text-base font-bold text-slate-800">📋 Transport Logs & Farmer Summary</h2>
+          <input type="text" id="searchTrans" placeholder="Search farmer..." oninput="renderTransportRecords()" class="rounded-xl px-2.5 py-1 text-xs w-32">
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="bg-sky-50 text-sky-900">
+                <th class="p-2 text-center">Date</th>
+                <th class="p-2 text-left">Farmer Name</th>
+                <th class="p-2 text-center">Boxes</th>
+                <th class="p-2 text-center">Rate</th>
+                <th class="p-2 text-center">Total Fare</th>
+                <th class="p-2 text-left">Notes</th>
+                <th class="p-2 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="transportTableBody">
+              <tr><td colspan="7" class="text-center text-slate-400 py-4">No records found.</td></tr>
+            </tbody>
+            <tfoot id="transportTableFooter" class="bg-sky-100/70 font-black text-sky-950 border-t-2 border-sky-300"></tfoot>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- TAB 2: WHATSAPP PRICE DISPATCHER -->
+    <div id="tab-whatsapp" class="space-y-5 tab-content hidden">
+      <!-- Farmer Directory Section -->
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">👥 Farmer Directory (Name & Phone)</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+          <input type="text" id="farmerNameInput" placeholder="Farmer Name (e.g. Ashok)" class="rounded-xl p-2.5 text-sm">
+          <input type="text" id="farmerPhoneInput" placeholder="WhatsApp Phone (e.g. 919876543210)" class="rounded-xl p-2.5 text-sm">
+          <button onclick="saveFarmerContact()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm">
+            ➕ Add / Update Farmer
+          </button>
+        </div>
+        <div id="farmerDirectoryChips" class="flex flex-wrap gap-2 pt-1"></div>
+      </section>
+
+      <!-- Price Calculator & WhatsApp Dispatcher -->
+      <section class="bg-white rounded-2xl shadow-md border border-slate-100 p-5">
+        <h2 class="text-base font-bold text-slate-800 mb-3 border-b border-slate-100 pb-2">💬 Send Daily Price & Estimate via WhatsApp</h2>
+
+        <div class="space-y-3">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Select Farmer</label>
+              <select id="dispatchFarmerSelect" onchange="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
+                <option value="">-- Select Farmer --</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Quality / Grade</label>
+              <select id="dispatchGrade" onchange="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">No. of Boxes</label>
+              <input type="number" id="dispatchBoxes" placeholder="100" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Less Boxes</label>
+              <input type="number" id="dispatchLess" value="5" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1">Auction Price (₹)</label>
+              <input type="number" id="dispatchPrice" placeholder="300" oninput="updateDispatchPreview()" class="w-full rounded-xl p-2.5 text-sm">
+            </div>
+          </div>
+
+          <div class="bg-sky-50/70 p-4 rounded-2xl border border-sky-200 text-xs space-y-1.5">
+            <div class="font-bold text-sky-900 uppercase text-[11px] mb-1">Calculated Estimate Preview (Auto Deductions):</div>
+            <div class="flex justify-between text-slate-600"><span>Net Sold Boxes:</span> <span id="prevSoldBoxes" class="font-bold text-slate-800">0</span></div>
+            <div class="flex justify-between text-slate-600"><span>Gross Amount:</span> <span class="font-bold text-slate-800">₹<span id="prevGross">0.00</span></span></div>
+            <div class="flex justify-between text-rose-700 font-semibold"><span>Less Deductions (Transport @₹25 + Comm + Rent):</span> <span>- ₹<span id="prevDeductions">0.00</span></span></div>
+            <div class="flex justify-between font-black text-sky-950 text-sm border-t border-sky-200 pt-1.5 mt-1">
+              <span>Estimated Net Payable Amount:</span>
+              <span>₹<span id="prevNetPayable">0.00</span></span>
+            </div>
+          </div>
+
+          <button onclick="sendWhatsAppMessage()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl text-sm shadow-sm transition flex items-center justify-center gap-1.5">
+            <span>💬</span> Send WhatsApp Message
+          </button>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <!-- FIXED BOTTOM NAVIGATION BAR -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-lg z-40">
+    <div class="max-w-3xl mx-auto flex justify-around items-center py-2">
+      <button onclick="switchTab('transport')" id="btn-bottom-transport" class="flex flex-col items-center gap-0.5 text-sky-700 font-bold transition">
+        <span class="text-lg">🚛</span>
+        <span class="text-[10px]">Transport Records</span>
+      </button>
+      <button onclick="switchTab('whatsapp')" id="btn-bottom-whatsapp" class="flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition">
+        <span class="text-lg">💬</span>
+        <span class="text-[10px]">Price Dispatcher</span>
+      </button>
+    </div>
+  </footer>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+    import { getDatabase, ref, push, remove, onValue, set, get } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyDWBw7KI3VG7M9FA00_DISNwVOTdAw5Rwg",
+      authDomain: "tomato-rate-tracker.firebaseapp.com",
+      databaseURL: "https://tomato-rate-tracker-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "tomato-rate-tracker",
+      storageBucket: "tomato-rate-tracker.firebasestorage.app",
+      messagingSenderId: "982467450318",
+      appId: "1:982467450318:web:1538c54e03b50861b9879f"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    document.getElementById('transDate').valueAsDate = new Date();
+
+    let currentUser = localStorage.getItem('guruswamy_logged_user') || null;
+    const dbPrefix = 'guruswamy_';
+
+    function showToast(msg = "Action completed successfully") {
+        const toast = document.getElementById('toastBanner');
+        document.getElementById('toastText').innerText = msg;
+        toast.style.opacity = '1';
+        setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+    }
+
+    window.handleLogin = function() {
+        let uInput = document.getElementById('loginUser').value.trim().toLowerCase();
+        let pInput = document.getElementById('loginPass').value.trim();
+        let errDiv = document.getElementById('loginError');
+
+        if (uInput === 'guruswamy' && pInput === '1234') {
+            currentUser = 'Guruswamy';
+        } else {
+            errDiv.classList.remove('hidden');
+            return;
+        }
+
+        localStorage.setItem('guruswamy_logged_user', currentUser);
+        document.getElementById('loginModal').classList.add('hidden');
+        initGuruswamyApp();
+    };
+
+    window.logout = function() {
+        localStorage.removeItem('guruswamy_logged_user');
+        currentUser = null;
+        document.getElementById('loginUser').value = '';
+        document.getElementById('loginPass').value = '';
+        document.getElementById('loginModal').classList.remove('hidden');
+    };
+
+    if (!currentUser) {
+        document.getElementById('loginModal').classList.remove('hidden');
+    } else {
+        initGuruswamyApp();
+    }
+
+    let cloudTransportRecords = [];
+    let farmerDirectory = {};
+
+    function initGuruswamyApp() {
+        loadTransportData();
+        loadFarmerDirectory();
+    }
+
+    window.switchTab = function(tabName) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.getElementById('tab-' + tabName).classList.remove('hidden');
+        
+        ['transport', 'whatsapp'].forEach(t => {
+            const btn = document.getElementById('btn-bottom-' + t);
+            if (btn) {
+                btn.className = t === tabName ? "flex flex-col items-center gap-0.5 text-sky-700 font-bold transition" : "flex flex-col items-center gap-0.5 text-slate-500 font-medium hover:text-sky-700 transition";
+            }
+        });
+    };
+
+    window.calculateTransport = function() {
+        let boxes = parseFloat(document.getElementById('transBoxes').value) || 0;
+        let rate = 25; // Fixed transport rate
+        document.getElementById('transTotalDisplay').innerText = (boxes * rate).toFixed(2);
+    };
+
+    window.saveTransportRecord = async function() {
+        let date = document.getElementById('transDate').value;
+        let farmerName = document.getElementById('transFarmerName').value.trim();
+        let boxes = parseFloat(document.getElementById('transBoxes').value) || 0;
+        let notes = document.getElementById('transNotes').value.trim() || '-';
+
+        if (!date || !farmerName || boxes <= 0) return showToast('Please enter valid date, farmer name, and boxes');
+
+        try {
+            await push(ref(db, `${dbPrefix}transport_records`), {
+                date, farmerName, boxes, rate: 25, totalFare: boxes * 25, notes, timestamp: Date.now()
+            });
+            showToast('Transport record saved successfully');
+            document.getElementById('transBoxes').value = '';
+            document.getElementById('transNotes').value = '';
+            document.getElementById('transTotalDisplay').innerText = '0.00';
+        } catch (error) { showToast("Error: " + error.message); }
+    };
+
+    function loadTransportData() {
+        onValue(ref(db, `${dbPrefix}transport_records`), (snapshot) => {
+            cloudTransportRecords = [];
+            snapshot.forEach(child => {
+                let item = child.val();
+                item.id = child.key;
+                cloudTransportRecords.push(item);
+            });
+            renderTransportRecords();
+        });
+    }
+
+    window.renderTransportRecords = function() {
+        let tbody = document.getElementById('transportTableBody');
+        let tfoot = document.getElementById('transportTableFooter');
+        let search = document.getElementById('searchTrans').value.toLowerCase().trim();
+        tbody.innerHTML = '';
+
+        let filtered = cloudTransportRecords.filter(r => search === '' || r.farmerName.toLowerCase().includes(search));
+        filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        if (filtered.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-slate-400 py-4">No transport records found.</td></tr>';
+            tfoot.innerHTML = '';
+            return;
+        }
+
+        let totalBoxesSum = 0;
+        let totalFareSum = 0;
+
+        filtered.forEach(r => {
+            totalBoxesSum += r.boxes;
+            totalFareSum += r.totalFare;
+            tbody.innerHTML += `
+                <tr>
+                    <td class="p-2 text-center">${r.date}</td>
+                    <td class="p-2 text-left font-bold text-slate-800">${r.farmerName}</td>
+                    <td class="p-2 text-center">${r.boxes}</td>
+                    <td class="p-2 text-center">₹25</td>
+                    <td class="p-2 text-center font-extrabold text-sky-800">₹${r.totalFare.toFixed(2)}</td>
+                    <td class="p-2 text-left text-slate-500">${r.notes}</td>
+                    <td class="p-2 text-center"><button onclick="deleteTransport('${r.id}')" class="text-rose-600 font-bold hover:underline">Del</button></td>
+                </tr>
+            `;
+        });
+
+        tfoot.innerHTML = `
+            <tr>
+                <td class="p-2 text-center uppercase">TOTAL</td>
+                <td class="p-2 text-left">-</td>
+                <td class="p-2 text-center">${totalBoxesSum}</td>
+                <td class="p-2 text-center">-</td>
+                <td class="p-2 text-center">₹${totalFareSum.toFixed(2)}</td>
+                <td class="p-2 text-left" colspan="2">-</td>
+            </tr>
+        `;
+    };
+
+    window.deleteTransport = async function(id) {
+        if (confirm("Delete this record?")) await remove(ref(db, `${dbPrefix}transport_records/${id}`));
+    };
+
+    function loadFarmerDirectory() {
+        onValue(ref(db, `${dbPrefix}farmer_directory`), (snapshot) => {
+            farmerDirectory = {};
+            snapshot.forEach(child => {
+                farmerDirectory[child.key] = child.val();
+            });
+            renderFarmerDirectory();
+        });
+    }
+
+    window.saveFarmerContact = async function() {
+        let name = document.getElementById('farmerNameInput').value.trim();
+        let phone = document.getElementById('farmerPhoneInput').value.trim();
+        if (!name || !phone) return showToast('Please enter both name and phone number');
+
+        try {
+            await set(ref(db, `${dbPrefix}farmer_directory/${name}`), { phone });
+            showToast('Farmer contact saved');
+            document.getElementById('farmerNameInput').value = '';
+            document.getElementById('farmerPhoneInput').value = '';
+        } catch (error) { showToast("Error: " + error.message); }
+    };
+
+    window.deleteFarmerContact = async function(name) {
+        if (confirm(`Remove ${name} from directory?`)) await remove(ref(db, `${dbPrefix}farmer_directory/${name}`));
+    };
+
+    function renderFarmerDirectory() {
+        let chips = document.getElementById('farmerDirectoryChips');
+        let select = document.getElementById('dispatchFarmerSelect');
+        chips.innerHTML = '';
+        select.innerHTML = '<option value="">-- Select Farmer --</option>';
+
+        let names = Object.keys(farmerDirectory);
+        if (names.length === 0) {
+            chips.innerHTML = '<span class="text-xs text-slate-400 italic">No farmers added yet. Add your first farmer above.</span>';
+            return;
+        }
+
+        names.forEach(name => {
+            let phone = farmerDirectory[name].phone;
+            select.innerHTML += `<option value="${name}">${name} (${phone})</option>`;
+            chips.innerHTML += `
+                <div class="bg-sky-50 border border-sky-200 px-3 py-1.5 rounded-xl text-xs flex items-center gap-2">
+                    <span class="font-bold text-slate-800">${name}</span>
+                    <span class="text-slate-500">${phone}</span>
+                    <button onclick="deleteFarmerContact('${name}')" class="text-rose-500 font-bold ml-1">×</button>
+                </div>
+            `;
+        });
+    }
+
+    window.updateDispatchPreview = function() {
+        let boxes = parseFloat(document.getElementById('dispatchBoxes').value) || 0;
+        let less = parseFloat(document.getElementById('dispatchLess').value) || 0;
+        let price = parseFloat(document.getElementById('dispatchPrice').value) || 0;
+        let soldBoxes = Math.max(0, boxes - less);
+
+        let gross = soldBoxes * price;
+        let transportDed = boxes * 25; // Transport at ₹25 per total boxes
+        let commDed = soldBoxes * (price * 0.10); // Standard 10% commission on sold units
+        let rentDed = boxes * 4; // Market rent at ₹4 per total boxes
+        let totalDeductions = transportDed + commDed + rentDed;
+        let netPayable = gross - totalDeductions;
+
+        document.getElementById('prevSoldBoxes').innerText = soldBoxes;
+        document.getElementById('prevGross').innerText = gross.toFixed(2);
+        document.getElementById('prevDeductions').innerText = totalDeductions.toFixed(2);
+        document.getElementById('prevNetPayable').innerText = netPayable.toFixed(2);
+    };
+
+    window.sendWhatsAppMessage = function() {
+        let farmerName = document.getElementById('dispatchFarmerSelect').value;
+        if (!farmerName || !farmerDirectory[farmerName]) return showToast('Please select a valid farmer from directory');
+        
+        let phone = farmerDirectory[farmerName].phone;
+        let grade = document.getElementById('dispatchGrade').value;
+        let boxes = parseFloat(document.getElementById('dispatchBoxes').value) || 0;
+        let less = parseFloat(document.getElementById('dispatchLess').value) || 0;
+        let price = parseFloat(document.getElementById('dispatchPrice').value) || 0;
+        
+        if (boxes <= 0 || price <= 0) return showToast('Please enter valid boxes and price');
+
+        let soldBoxes = Math.max(0, boxes - less);
+        let gross = soldBoxes * price;
+        let transportDed = boxes * 25;
+        let commDed = soldBoxes * (price * 0.10);
+        let rentDed = boxes * 4;
+        let totalDeductions = transportDed + commDed + rentDed;
+        let netPayable = gross - totalDeductions;
+
+        let msg = `🌾 *Market Daily Price & Estimate Summary*\n`;
+        msg += `👤 *Farmer:* ${farmerName}\n`;
+        msg += `📦 *Quality/Grade:* ${grade}\n`;
+        msg += `📊 *Total Boxes:* ${boxes} | *Less:* ${less} | *Net Sold:* ${soldBoxes}\n`;
+        msg += `💰 *Auction Rate:* ₹${price}/unit\n\n`;
+        msg += `📈 *Gross Amount:* ₹${gross.toFixed(2)}\n`;
+        msg += `🔻 *Deductions:*\n`;
+        msg += `   • Transport (@₹25): ₹${transportDed.toFixed(2)}\n`;
+        msg += `   • Commission & Rent: ₹${(commDed + rentDed).toFixed(2)}\n`;
+        msg += `💵 *Estimated Net Payable:* ₹${netPayable.toFixed(2)}\n\n`;
+        msg += `Regards,\n*Guruswamy Transport*`;
+
+        window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(msg)}`, '_blank');
+    };
+</script>
+
+</body>
+</html>
