@@ -819,7 +819,7 @@
 
         let todayDate = new Date().toISOString().split('T')[0];
 
-        // SYNC TO FARMING APP YIELDING TAB WITH ALL DUPLICATE & UNDEFINED PREVENTIONS
+        // SYNC TO FARMING APP YIELDING TAB WITH EXACT MATCHING PROPERTY KEYS
         try {
             const auctionRef = ref(db, 'tomato_auction_entries');
             const snapshot = await get(auctionRef);
@@ -828,13 +828,13 @@
             if (snapshot.exists()) {
                 snapshot.forEach(child => {
                     let entry = child.val();
-                    if (entry.date === todayDate && entry.userId === username && (entry.grade || entry.quality || '').toUpperCase() === grade) {
+                    if (entry.date === todayDate && entry.userId === username && ((entry.grade || entry.quality || '').toUpperCase() === grade)) {
                         existingKey = child.key;
                     }
                 });
             }
 
-            // Provide all fallback property variations so no view shows "undefined"
+            // Comprehensive property mapping so the farming app reads grade, units, less, rate properly without "undefined"
             const yieldData = {
                 userId: username,
                 farmerName: farmerName,
